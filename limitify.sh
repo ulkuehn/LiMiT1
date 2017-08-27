@@ -29,7 +29,7 @@ my_name="LiMiT1"
 # major version; full version number is "major.minor"
 my_major="1.0"
 # minor version counter, may get updated automagically by git commit
-my_minor="3"
+my_minor="4"
 
 # password (leave empty for setting interactively)
 password="limit1"
@@ -401,19 +401,6 @@ log ... packages installed\\n
 
 
 #-------------------------------------------------------------------------------
-# patch udev rule file (enable modeswitch for HUAWEI 3G modems)
-# see https://github.com/RPi-Distro/repo/issues/47
-# might well be distro spedific!
-#-------------------------------------------------------------------------------
-
-log patching udev rule file ...
-
-log `/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-
-log ... udev rule file patched\\n
-
-
-#-------------------------------------------------------------------------------
 # disable services
 #-------------------------------------------------------------------------------
 
@@ -538,6 +525,19 @@ log installing software ...
 log `/bin/tar xjvf $myname.tar.bz2 -C $basedir 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
 
 log ... software installed\\n
+
+
+#-------------------------------------------------------------------------------
+# patch udev rule file (enable modeswitch for HUAWEI 3G modems)
+# see https://github.com/RPi-Distro/repo/issues/47
+# might well be distro spedific!
+#-------------------------------------------------------------------------------
+
+log patching udev rule file ...
+
+log `/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+
+log ... udev rule file patched\\n
 
 
 #-------------------------------------------------------------------------------
