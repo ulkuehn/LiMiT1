@@ -29,7 +29,7 @@ my_name="LiMiT1"
 # major version; full version number is "major.minor"
 my_major="1.0"
 # minor version counter, may get updated automagically by git commit
-my_minor="2"
+my_minor="3"
 
 # password (leave empty for setting interactively)
 password="limit1"
