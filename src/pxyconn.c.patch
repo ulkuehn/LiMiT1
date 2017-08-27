@@ -1,0 +1,69 @@
+*** pxyconn.c.ORIG	2016-04-26 12:51:01.000000000 +0200
+--- pxyconn.c.CHANGED	2016-04-26 15:00:22.000000000 +0200
+***************
+*** 540,545 ****
+--- 540,586 ----
+  	return;
+  }
+  
++ 
++ static void
++ pxy_log_connect (pxy_conn_ctx_t *ctx)
++ {
++   char *certinfo;
++   unsigned char fingerprint[32];
++ 	unsigned int fpBytes = 32;
++   
++ 	if (ctx->spec->ssl && !ctx->passthrough && !ctx->opts->detach && ctx->srchost_str && ctx->srcport_str && ctx->dsthost_str && ctx->dstport_str && ctx->origcrt)
++   {
++     if ( X509_digest(ctx->origcrt, EVP_sha256(), fingerprint, &fpBytes) && (certinfo = ssl_x509_to_str (ctx->origcrt)) )
++     {
++       log_connect_printf ("\n"
++                           "Source: %s_%s\n"
++                           "Destination: %s_%s\n"
++                           "Version: %s\n"
++                           "VersionID: %02x\n"
++                           "Cipher: %s\n"                          
++                           "CipherID: %04x\n"
++                           "Number of bits really used: %d\n"
++                           "Number of bits for algorithm: %d\n"
++                           "SHA256 Fingerprint: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n"
++                           "%s\n",
++                           ctx->srchost_str,ctx->srcport_str,
++                           ctx->dsthost_str,ctx->dstport_str,
++                           SSL_get_version (ctx->dst.ssl),
++                           SSL_get_current_cipher(ctx->dst.ssl)->id >> 24, /* cf. openssl/ssl.h, struct ssl_cipher_st */
++                           SSL_get_cipher (ctx->dst.ssl),
++                           SSL_get_current_cipher(ctx->dst.ssl)->id & 0xffff,
++                           SSL_get_current_cipher(ctx->dst.ssl)->strength_bits,
++                           SSL_get_current_cipher(ctx->dst.ssl)->alg_bits,
++                           fingerprint[0], fingerprint[1], fingerprint[2], fingerprint[3], fingerprint[4], fingerprint[5], fingerprint[6], fingerprint[7], fingerprint[8], fingerprint[9], fingerprint[10], fingerprint[11], fingerprint[12], fingerprint[13], fingerprint[14], fingerprint[15], fingerprint[16], fingerprint[17], fingerprint[18], fingerprint[19], fingerprint[20],  fingerprint[21],  fingerprint[22],  fingerprint[23],  fingerprint[24], fingerprint[25],  fingerprint[26],  fingerprint[27],  fingerprint[28],  fingerprint[29], fingerprint[30], fingerprint[31],
++                           certinfo);
++       free (certinfo);
++     }
++   }
++ 
++ 	return;
++ }
++ 
++ 
+  /*
+   * Called by OpenSSL when a new src SSL session is created.
+   * OpenSSL increments the refcount before calling the callback and will
+***************
+*** 1919,1925 ****
+  		if ((!this->ssl || (bev == ctx->src.bev)) &&
+  		    (!ctx->spec->http || ctx->passthrough) &&
+  		    WANT_CONNECT_LOG(ctx)) {
+! 			pxy_log_connect_nonhttp(ctx);
+  		}
+  
+  		/* write SSL certificates to gendir */
+--- 1960,1966 ----
+  		if ((!this->ssl || (bev == ctx->src.bev)) &&
+  		    (!ctx->spec->http || ctx->passthrough) &&
+  		    WANT_CONNECT_LOG(ctx)) {
+! 			pxy_log_connect(ctx);
+  		}
+  
+  		/* write SSL certificates to gendir */

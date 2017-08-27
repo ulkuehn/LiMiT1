@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="index.css" type="text/css" media="screen" />
+
+		<script src="jquery-1.6.min.js" type="text/javascript"></script>
+		<script src="../public/jquery.syntax.js" type="text/javascript"></script>
+		<script src="../public/jquery.syntax.cache.js" type="text/javascript"></script>
+
+		<script type="text/javascript">
+			$(function() {
+				jQuery.syntax();
+			});
+		</script>
+
+	</head>
+	<body>
+		<h1>Syntax: Bash</h1>
+		
+		<p>Bash is context-sensitive - a script could mean different things depending on what is defined in the environment. Thus, to present Bash code clearly, you will need to use inline markup, such as the last example on this page.</p>
+		
+		<pre class="syntax brush-bash-script">#!/bin/bash
+# Counting to 11 in 10 different ways.
+
+n=1; echo -n &quot;$n &quot;
+
+let &quot;n = $n + 1&quot;   # let &quot;n = n + 1&quot;  also works.
+echo -n &quot;$n &quot;
+
+
+: $((n = $n + 1))
+#  &quot;:&quot; necessary because otherwise Bash attempts
+#+ to interpret &quot;$((n = $n + 1))&quot; as a command.
+echo -n &quot;$n &quot;
+
+(( n = n + 1 ))
+#  A simpler alternative to the method above.
+#  Thanks, David Lombard, for pointing this out.
+echo -n &quot;$n &quot;
+
+n=$(($n + 1))
+echo -n &quot;$n &quot;
+
+: $[ n = $n + 1 ]
+#  &quot;:&quot; necessary because otherwise Bash attempts
+#+ to interpret &quot;$[ n = $n + 1 ]&quot; as a command.
+#  Works even if &quot;n&quot; was initialized as a string.
+echo -n &quot;$n &quot;
+
+n=$[ $n + 1 ]
+#  Works even if &quot;n&quot; was initialized as a string.
+#* Avoid this type of construct, since it is obsolete and nonportable.
+#  Thanks, Stephane Chazelas.
+echo -n &quot;$n &quot;
+
+# Now for C-style increment operators.
+# Thanks, Frank Wang, for pointing this out.
+
+let &quot;n++&quot;          # let &quot;++n&quot;  also works.
+echo -n &quot;$n &quot;
+
+(( n++ ))          # (( ++n )  also works.
+echo -n &quot;$n &quot;
+
+: $(( n++ ))       # : $(( ++n )) also works.
+echo -n &quot;$n &quot;
+
+: $[ n++ ]         # : $[ ++n ]] also works
+echo -n &quot;$n &quot;
+
+echo
+
+exit 0</pre>
+
+<p>
+
+<pre class="syntax bash-script">#!/bin/bash
+
+svc_cluster_ip=10.0.0.10
+svc_priv_dsa=~/.ssh/id_dsa
+
+if [ ! -f $svc_priv_dsa ] ; then
+	echo &quot; ${0##*/} is missing the SSH DSA private key&quot;
+	echo &quot;                         needed to access the SAN Volume controller.&quot;
+	echo &quot; Please specify the correct path!&quot;
+fi
+
+if [ -z $1 ] ; then
+	echo
+	echo &quot; ${0##*/} [ WWPN ]&quot;
+	echo
+	echo &quot;  WWPN    - WWPN, or part of WWPN that is being searched.&quot;
+	echo &quot;            Should be entered in continous format (ie. no dash (-) or colon (:))!&quot;
+	echo
+	exit 1;
+fi
+
+WWPN=$1
+
+list_wwpn_by_host() {
+	local _host=$1
+
+	if [ ! -z $_host ] ; then
+		ssh -i $svc_priv_dsa admin@$svc_cluster_ip svcinfo lshost \
+		-delim : $_host | grep ^WWPN | sed &quot;s,WWPN:,,&quot;
+	fi
+}
+
+#set -x
+
+HOST_LIST=&quot;$( ssh -i $svc_priv_dsa admin@$svc_cluster_ip svcinfo lshost -delim : -nohdr | cut -d: -f2 )&quot;
+
+for HOST in $HOST_LIST; do
+	echo -n &quot;$HOST: &quot;
+	echo `list_wwpn_by_host $HOST`
+done | grep $WWPN
+
+#set +x
+</pre>
+
+<p>This next example uses inline HTML to markup and highlight <code class="syntax bash-script">rd-resolve-test bob</code>.</p>
+
+<pre id="ex2" class="syntax brush-bash">samuel@ayako:~$ which git
+/usr/bin/git
+samuel@ayako:~$ ls -lah
+getconf     getent      getopt      getopts     gettext     gettext.sh  gettextize  
+samuel@ayako:~# sudo <span class="highlight"><span class="function">rd-resolve-test</span> bob</span>
+/home/samuel</pre>
+
+<p>Here is the HTML of the above <code class="syntax html">&lt;pre&gt;</code>:</p>
+
+<pre id="ex2_html" class="syntax html"></pre>
+
+<script type="text/javascript">
+	$('#ex2_html').text($('<div>').append($('#ex2').clone()).html());
+</script>
+
+	</body>
+</html>

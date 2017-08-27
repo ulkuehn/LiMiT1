@@ -1,0 +1,18 @@
+body {
+	font-size: 80%;
+	font-family: sans-serif;
+	padding: 1em 3em 1em;
+}
+
+div.title {
+	text-align: center;
+}
+
+h1 {
+	background-color: #eee;
+	border-bottom: 2px solid black;
+	border-top: 2px solid black;
+	padding: 10px;
+	
+	text-align: center;
+}
