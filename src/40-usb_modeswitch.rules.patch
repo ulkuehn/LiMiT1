@@ -1,0 +1,13 @@
+--- 40-usb_modeswitch.rules.ORIG	2017-08-27 21:55:58.000000000 +0200
++++ 40-usb_modeswitch.rules.CHANGED	2017-08-27 22:04:23.000000000 +0200
+@@ -21,7 +21,9 @@
+ 
+ 
+ # Generic entry for all Huawei devices
+-ATTRS{idVendor}=="12d1", ATTR{bInterfaceNumber}=="00", ATTR{bInterfaceClass}=="08", RUN+="usb_modeswitch '%b/%k'"
++# changed by LiMiT1 patch, see https://github.com/RPi-Distro/repo/issues/47
++# was: ATTRS{idVendor}=="12d1", ATTR{bInterfaceNumber}=="00", ATTR{bInterfaceClass}=="08", RUN+="usb_modeswitch '%b/%k'"
++ATTRS{idVendor}=="12d1", ATTR{bInterfaceNumber}=="00", ATTR{bInterfaceClass}=="08", RUN+="usb_modeswitch '%k'"
+ 
+ # HP LaserJet Professional P1102
+ ATTR{idVendor}=="03f0", ATTR{idProduct}=="002a", RUN+="usb_modeswitch '%b/%k'"

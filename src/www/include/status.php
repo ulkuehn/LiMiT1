@@ -85,6 +85,9 @@ $line = fgets ($eth);
 fclose ($eth);
 echo "<tr><td>MAC-Adresse WLAN</td><td>",$line,"</td></tr>";
 
+# Software
+echo "<tr><td>Software-Version</td><td>",$my_version,"</td></tr>";
+
 echo <<<LIMIT1
               </tbody>
             </table>

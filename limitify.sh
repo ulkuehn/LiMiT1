@@ -29,7 +29,7 @@ my_name="LiMiT1"
 # major version; full version number is "major.minor"
 my_major="1.0"
 # minor version counter, may get updated automagically by git commit
-my_minor="1"
+my_minor="2"
 
 # password (leave empty for setting interactively)
 password="limit1"
@@ -67,7 +67,7 @@ __whoisbox="1"
 __usetabs="1"
 
 # skin
-__skin=
+__skin=""
 
 # tables
 __klick="oncontextmenu"
@@ -119,7 +119,7 @@ pi2revisions="a01040 a01041 a21041 a22042"
 pi3revisions="a02082 a22082"
 
 # list of files to ship
-files2ship="start.sh ciphers.sql ciphersuites.php ciphersuites.txt initialize.sql sslsplit-latest.tar.bz2 pxyconn.c.patch www"
+files2ship="start.sh ciphers.sql ciphersuites.php ciphersuites.txt initialize.sql sslsplit-latest.tar.bz2 pxyconn.c.patch 40-usb_modeswitch.rules.patch www"
 
 
 ### no changes beyond this line!
@@ -401,6 +401,19 @@ log ... packages installed\\n
 
 
 #-------------------------------------------------------------------------------
+# patch udev rule file (enable modeswitch for HUAWEI 3G modems)
+# see https://github.com/RPi-Distro/repo/issues/47
+# might well be distro spedific!
+#-------------------------------------------------------------------------------
+
+log patching udev rule file ...
+
+log `/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+
+log ... udev rule file patched\\n
+
+
+#-------------------------------------------------------------------------------
 # disable services
 #-------------------------------------------------------------------------------
 
@@ -556,7 +569,7 @@ log making configuration file ...
 # Boxen
 __suchbox="$__suchbox"
 __dekodbox="$__dekodbox"
-__whoisbox="$__whoisbox1"
+__whoisbox="$__whoisbox"
 __usetabs="$__usetabs"
 # Skin
 __skin="$__skin"

@@ -64,7 +64,7 @@ Dieser Schritt besteht im Wesentlichen aus der Konfiguration einer SD-Karte. Hie
 
 ### Raspian-Lite-Image dowloaden
 
-Das Betriebssystem-Image kann unter <http://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2016-11-29/2016-11-25-raspbian-jessie-lite.zip> heruntergeladen werden (ca. 300 MB). Bitte nur diese aktuell unterstützte Fassung verwenden! Nach dem Entzippen der Datei steht das Raspberry-Lite-Image als .img-Datei zur Verfügung (ca. 1.4 GB).
+Das Betriebssystem-Image kann unter <http://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2017-07-05/2017-07-05-raspbian-jessie-lite.zip> heruntergeladen werden (ca. 300 MB). Bitte nur diese aktuell unterstützte Fassung verwenden! Nach dem Entzippen der Datei steht das Raspberry-Lite-Image als .img-Datei zur Verfügung (ca. 1.7 GB).
 
 ### SD-Karte vorbereiten
 
@@ -82,7 +82,7 @@ Als Nutzer `pi` mit Passwort `raspberry` anmelden. Bitte beachten: Da zunächst 
 
 Anschließend ausführen
 
-`$ cd boot`
+`$ cd /boot`
 
 `$ sudo bash ./limitify.sh`
 
