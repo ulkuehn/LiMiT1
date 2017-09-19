@@ -33,7 +33,7 @@ $cookie_s = $db->prepare("select * from cookie where id=?");
 $cookie_s->execute (array($_REQUEST["cookie"]));
 $cookie = $cookie_s->fetch();
 
-titelHilfe ("Cookiedetails", <<<LIMIT1
+titleAndHelp ("Cookiedetails", <<<LIMIT1
 In dieser Auswertung sind sämtliche Übertragungen des Cookies <strong>{$cookie["name"]}</strong> von der Site <strong>{$cookie["site"]}</strong> berücksichtigt.
 "Site" bezeichnet dabei den Domain-Parameter des Set-Cookie-Headers, mit dem das Cookie gesetzt wird.
 Er kann aus einer Domain- oder einer Server-Angabe bestehen.

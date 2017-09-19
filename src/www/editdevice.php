@@ -32,7 +32,7 @@ require ("include/htmlstart.php");
 require ("include/topmenu.php");
 require ("include/database.php");
 
-titelHilfe ("Gerät bearbeiten", <<<LIMIT1
+titleAndHelp ("Gerät bearbeiten", <<<LIMIT1
 Ein vorhandenes Gerät kann hier editiert werden.
 Dabei können bestehende Eigenschaften angepasst oder gelöscht sowie neue Eigenschaften hinzugefügt werden.
 LIMIT1

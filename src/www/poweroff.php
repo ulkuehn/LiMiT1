@@ -16,7 +16,7 @@
 //==============================================================================
 //==============================================================================
 
- 
+
 require ("include/constants.php");
 require ("include/configuration.php");
 require ("include/utility.php");
@@ -25,8 +25,7 @@ require ("include/http.php");
 require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
-
-function bye ($titel, $text)
+function bye ( $titel, $text )
 {
   echo <<<LIMIT1
   <div class="row">
@@ -41,53 +40,28 @@ function bye ($titel, $text)
   </div> 
 LIMIT1;
 }
- 
 
-if (file_exists ($session_file))
+if ( file_exists ( $session_file ) )
 {
-  titelHilfe ($_REQUEST["restart"]==1? "Neu starten":"Herunterfahren","");
-  errorMsg ("Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor $my_name ".($_REQUEST["restart"]==1? "neu gestartet":"heruntergefahren")." werden kann.");
+  titleAndHelp ( $_REQUEST[ "restart" ] == 1 ? "Neu starten" : "Herunterfahren", "" );
+  errorMsg ( "Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor $my_name " . ($_REQUEST[ "restart" ] == 1 ? "neu gestartet" : "heruntergefahren") . " werden kann." );
 }
-
 else
 {
-  if (array_key_exists("shutdown",$_POST))
+  if ( array_key_exists ( "shutdown", $_POST ) )
   {
-    bye ("$my_name wird beendet","Tschüss und bis zum nächsten Mal !");
+    bye ( "$my_name wird beendet", "Tschüss und bis zum nächsten Mal !" );
   }
-  else if (array_key_exists("restart",$_POST))
+  else if ( array_key_exists ( "restart", $_POST ) )
   {
-    bye ("$my_name startet neu","$my_name ist in Kürze zurück ...");
-
-    echo <<<LIMIT1
-    <script>
-      var xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = function() 
-      {
-        if (xmlhttp.readyState==4)
-        {
-          if (xmlhttp.status==200)
-          {
-            window.location.assign(window.location.protocol+"//"+window.location.hostname);
-          }
-          else
-          {
-            xmlhttp.open("GET",window.location.protocol+"//"+window.location.hostname,true);
-            xmlhttp.send();
-          }          
-        }
-      }
-      xmlhttp.open("GET",window.location.protocol+"//"+window.location.hostname,true);
-      setTimeout (function() { xmlhttp.send(); }, 5000);
-      setInterval (function () { document.getElementById("bye").innerHTML += "<i class=\"fa fa-arrow-right\"></i> "; }, 2000);
-    </script>
-LIMIT1;
+    bye ( "$my_name startet neu", "$my_name ist in Kürze zurück ..." );
+    waitForReboot ( "bye", "fa-heart" );
   }
   else
   {
-    if ($_GET["restart"] == 1)
+    if ( $_GET[ "restart" ] == 1 )
     {
-      titelHilfe ("Neu starten", "Mit dieser Funktion wird $my_name neu gestartet");
+      titleAndHelp ( "Neu starten", "Mit dieser Funktion wird $my_name neu gestartet" );
       echo <<<LIMIT1
   <form method="post">
     <div class="row">
@@ -97,7 +71,7 @@ LIMIT1;
         </div>
         <div class="panel-body">
 LIMIT1;
-      infoMsg ("Der Neustart benötigt einige Zeit. Das Browserfenster kann währenddessen geöffnet bleiben,");
+      infoMsg ( "Der Neustart benötigt einige Zeit. Das Browserfenster kann währenddessen geöffnet bleiben." );
       echo <<<LIMIT1
           <input type="submit" class="btn btn-primary" value="Neu starten" name="restart">
         </div>
@@ -108,7 +82,7 @@ LIMIT1;
     }
     else
     {
-      titelHilfe ("Herunterfahren", "Mit dieser Funktion wird $my_name heruntergefahren");
+      titleAndHelp ( "Herunterfahren", "Mit dieser Funktion wird $my_name heruntergefahren" );
       echo <<<LIMIT1
   <form method="post">
     <div class="row">
@@ -118,7 +92,7 @@ LIMIT1;
         </div>
         <div class="panel-body">
 LIMIT1;
-      infoMsg ("Nach dem Herunterfahren kann die Stromversorgung von $my_name abgeschaltet werden.");
+      infoMsg ( "Nach dem Herunterfahren kann die Stromversorgung von $my_name abgeschaltet werden." );
       echo <<<LIMIT1
           <input type="submit" class="btn btn-primary" value="Herunterfahren" name="shutdown">
         </div>
@@ -133,15 +107,14 @@ LIMIT1;
 require ("include/htmlend.php");
 
 
-if (array_key_exists("shutdown",$_POST))
+if ( array_key_exists ( "shutdown", $_POST ) )
 {
-  exec ("/bin/umount $mount_dir");
-  exec ("(/bin/sleep 3 && /sbin/halt) > /dev/null 2>&1 &");
-}  
-else if (array_key_exists("restart",$_POST))
-{
-  exec ("/bin/umount $mount_dir");
-  exec ("(/bin/sleep 3 && /sbin/reboot) > /dev/null 2>&1 &");
+  exec ( "/bin/umount $mount_dir" );
+  exec ( "(/bin/sleep 3 && /sbin/halt) > /dev/null 2>&1 &" );
 }
-
+else if ( array_key_exists ( "restart", $_POST ) )
+{
+  exec ( "/bin/umount $mount_dir" );
+  exec ( "(/bin/sleep 3 && /sbin/reboot) > /dev/null 2>&1 &" );
+}
 ?>

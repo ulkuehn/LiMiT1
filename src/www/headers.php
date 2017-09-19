@@ -113,7 +113,7 @@ if (!isset($_REQUEST["show"]))
 }
 
 
-titelHilfe ("HTTP-Header", <<<LIMIT1
+titleAndHelp ("HTTP-Header", <<<LIMIT1
 In dieser Auswertung werden sämtliche übertragenen HTTP-Header und die dabei übermittleten Werte aufgelistet.
 Es werden sowohl Request- als auch Response-Header berücksichtigt.<br>
 Für jeden Header-Typ kann im Drill-Down das Vorkommen der verschiedenen Werte analysiert werden.

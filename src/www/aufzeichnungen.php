@@ -254,7 +254,7 @@ if (isset($_POST["editieren"]))
 
 
 
-titelHilfe ("Aufzeichnungen", <<<LIMIT1
+titleAndHelp ("Aufzeichnungen", <<<LIMIT1
 <p>Diese Funktion bietet einen Überblick über die vorhandenen Aufzeichnungen. Dabei sind folgende Operationen möglich:</p>
 <div class="row">
   <div class="col-md-1">

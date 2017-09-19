@@ -30,7 +30,7 @@ $_provider = "Provider";
 $_pin = "PIN";
 
 
-titelHilfe ("Internetverbindung per UMTS", <<<LIMIT1
+titleAndHelp ("Internetverbindung per UMTS", <<<LIMIT1
 Ist ein UMTS-Stick angeschlossen, kann über diesen eine mobile Internetverbindung hergestellt werden.
 LIMIT1
 );

@@ -26,7 +26,7 @@ include ("include/http.php");
 include ("include/htmlstart.php");
 include ("include/topmenu.php");
 
-titelHilfe ("Details eines Requests", <<<LIMIT1
+titleAndHelp ("Details eines Requests", <<<LIMIT1
 In dieser Ansicht ist es möglich, schnell durch die vorhandenen Aufzeichnungen, deren Verbindungen und deren Requests zu blättern und dabei die Eigenschaften und die Inhalte des Requests zu betrachten.
 LIMIT1
 );

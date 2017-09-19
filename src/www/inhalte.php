@@ -135,7 +135,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("Inhalte", <<<LIMIT1
+titleAndHelp ("Inhalte", <<<LIMIT1
 Diese Auswertung betrachtet die per HTTP(S) übertragenen Inhalte der verschiedenen MIME-Typen.
 In der Regel werden Inhalte als Teil der Response übertragen, 
 aber auch im Request können Inhaltsdaten übermittelt werden.

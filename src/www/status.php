@@ -27,7 +27,7 @@ require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
 
-titelHilfe ("$my_name-Status", <<<LIMIT1
+titleAndHelp ("$my_name-Status", <<<LIMIT1
 Auf dieser Seite werden verschiedene statische und dynamische Eigenschaften des Systems angezeigt.
 LIMIT1
 );

@@ -31,7 +31,7 @@ $_pass = "Passwort";
 $_verbinden = "Verbinden";
 
 
-titelHilfe ("Internetverbindung per WLAN", <<<LIMIT1
+titleAndHelp ("Internetverbindung per WLAN", <<<LIMIT1
 Ist ein (weiterer) WLAN-Adapter vorhanden, kann die Internetverbindung über ein Funknetzwerk hergestellt werden.
 <br>
 Es kann sowohl ein erkanntes WLAN ausgewählt als auch eine SSID manuell angegeben werden.

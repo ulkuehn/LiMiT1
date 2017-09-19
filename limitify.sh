@@ -8,30 +8,32 @@
 #          SEE: https://github.com/ulkuehn/LiMiT1
 #       AUTHOR: Ulrich Kuehn
 #
-#        USAGE: limitify.sh [-i|-f|-s]
+#        USAGE: limitify.sh [options]
 #
-#  DESCRIPTION: -i: the script modifies a fresh raspbian install for use as
-#                   a LiMiT1 system which will be available after reboot
-#               -f: does so even if a LiMiT1 system is already installed
-#               -s: the script assembles the necessary files of an existing
-#                   LiMiT1 system into a tar archive for transfer
+#  DESCRIPTION: script to install or update a LiMit1 system
+#               available options:
+#                 -r <password> set root password (default is '$password')
+#                 -l <country.coding> set system locale (default is $locale_country.$locale_coding')
+#                 -L list available locales and exit
+#                 -t <timezone> set system timezone (default is '$timezone')
+#                 -T list available timezones and exit
+#                 -s <ssid> set default ssid for LiMiT1 wifi (default is '$__wlan_ssid')
+#                 -p <password> set default password for LiMiT1 wifi (default is '$__wlan_password')
+#                 -c <channel> set default wifi channel (default is $__wlan_channel)
 #
 #===============================================================================
 #===============================================================================
-
 
 ### base configuration
 
-# name (hostname, base dir)
-myname="limit1"
 # full name
 my_name="LiMiT1"
 # major version; full version number is "major.minor"
-my_major="1.0"
+my_major="1.1"
 # minor version counter, may get updated automagically by git commit
-my_minor="6"
+my_minor="1"
 
-# password (leave empty for setting interactively)
+# root password
 password="limit1"
 
 # name of configuration file
@@ -41,7 +43,7 @@ config_file="configuration"
 constants_file="constants"
 
 
-### system configuration
+### default system configuration
 
 # keyboard
 keyboard_model="pc105"
@@ -77,15 +79,23 @@ __zeilen="5 10 25"
 __dns_server_name="lim"
 __dns_domain_name="it1"
 
-# wifi
+# own wifi
 __wlan_ssid="limit1"
 __wlan_password="limit1limit"
 __wlan_channel="5"
 
-# local wifi network
+# own wifi network
 __ip_ip1="172"
 __ip_ip2="16"
 __ip_ip3="0"
+__ip_mask="255.255.255.0"
+
+# own ip address within network
+__ip_ip="1"
+
+# dhcp range
+__ip_dhcp1="2"
+__ip_dhcp2="254"
 
 # internet routing
 __internet_aufzeichnung="1"
@@ -93,6 +103,9 @@ __internet_aufzeichnung="1"
 # ports
 __tcp_ports=""
 __ssl_ports="443"
+
+# umts
+__umts="Tchibo Mobil:webmobil1;O2:pinternet.interkom.de;Vodafone:web.vodafone.de"
 
 
 ### software
@@ -118,14 +131,34 @@ services="ntp ssh bind9 hostapd lighttpd dhcpcd dhcpd isc-dhcp-client isc-dhcp-s
 pi2revisions="a01040 a01041 a21041 a22042"
 pi3revisions="a02082 a22082"
 
-# list of files to ship
-files2ship="start.sh ciphers.sql ciphersuites.php ciphersuites.txt initialize.sql sslsplit-latest.tar.bz2 pxyconn.c.patch 40-usb_modeswitch.rules.patch www"
+# dns root hints URL
+hintsurl="http://www.orsn.org/roothint/root-hint.txt"
 
 
 ### no changes beyond this line!
+### usage, help
+
+usage="for help use: ${BASH_SOURCE[0]} -h"
+help="${BASH_SOURCE[0]}
+script to put up a LiMiT1 system on a raspbian install
+must be invoked with root privileges (e.g. sudo)
+options:
+  -r <password> set root password (default is '$password')
+  -l <country.coding> set system locale (default is '$locale_country.$locale_coding')
+  -L list available locales and exit
+  -t <timezone> set system timezone (default is '$timezone')
+  -T list available timezones and exit
+  -s <ssid> set default ssid for LiMiT1 wifi (default is '$__wlan_ssid')
+  -p <password> set default password for LiMiT1 wifi (default is '$__wlan_password')
+  -c <channel> set default wifi channel (default is $__wlan_channel)
+"
+
+# sanitize my_name for use as installation base
+myname=$(echo -n $my_name | tr '[:upper:]' '[:lower:]' | tr '[:space:]' '_')
 basedir="/$myname"
-tempdir="/$myname/tmp"
-datadir="/$myname/data"
+# relative to basedir
+tempdir="tmp"
+datadir="data"
 
 logfile="${BASH_SOURCE[0]}".log
 
@@ -135,36 +168,59 @@ logfile="${BASH_SOURCE[0]}".log
 #         NAME: abort
 #  DESCRIPTION: abort due to fatal errors
 #   PARAMETERS: message text
-#       RESULT: echo message
+#       RESULT: echo message, exit with error code
 #===============================================================================
 
 abort ()
 {
   if [ $# -ne 0 ]
   then
-    log Aborting: $*
+    echo "*****************************************" | log
+    echo "Aborting: $*" | log
+    echo "*****************************************\\n" | log
   fi
   
-  exit 0
+  # exit non-normally
+  exit 1
 }
+
 
 #===  FUNCTION  ================================================================
 #         NAME: log
 #  DESCRIPTION: print a log entry
-#   PARAMETERS: message to log
+#   PARAMETERS: number of spaces to indent
 #       RESULT: message is logged with timestamp
 #===============================================================================
 
 log ()
 {
-  if [ "$1" != "" ]
+  sep=": "
+  if [ -n "$1" ] && expr $1 + 1 &> /dev/null
   then
-    echo -e `date +"%Y.%m.%d %H:%M:%S"`: "$*"
-    echo -e `date +"%Y.%m.%d %H:%M:%S"`: "$*" >> $logfile
-  else
-    echo
-    echo >> $logfile
+    for (( c=0; c<$1; c++ ))
+    do
+     sep="$sep "
+    done
   fi
+  
+  while IFS= read -r line; 
+  do 
+    echo -e `date +"%Y.%m.%d  %H:%M:%S"`"$sep$line"
+    echo -e `date +"%Y.%m.%d %H:%M:%S"`"$sep$line" >> $logfile
+  done
+}
+
+
+# utility versions having small and large indent
+
+logo ()
+{
+  log 2
+}
+
+logoo ()
+{
+  log 4
 }
 
 
@@ -174,6 +230,11 @@ log ()
 #===============================================================================
 #===============================================================================
 
+
+#-------------------------------------------------------------------------------
+# save old log
+#-------------------------------------------------------------------------------
+
 if [ -f $logfile ]
 then
   /bin/mv $logfile $logfile.old
@@ -181,79 +242,52 @@ fi
 
 
 #-------------------------------------------------------------------------------
-# shipping mode?
+# are we root/sudo?
 #-------------------------------------------------------------------------------
 
-log checking mode ...
+echo "checking user privileges ..." | log
 
-usage="usage: use -s for shipping mode, -i for install mode or -f for forced install"
-
-while getopts ":ifsh" o
-do
-  case "$o" in
-  "h" )
-    echo $usage
-    exit 0
-    ;;
-  "s" ) 
-    log shipping mode ...
-    if [ ! -d $basedir ]
-    then
-      abort "$basedir doesn't exist"
-    fi
-
-    log `/bin/tar cjvf $myname.tar.bz2 -C $basedir $files2ship 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-    log ... shipping done\\n
-    exit
-    ;;
-  "i" )
-    if [ -d $basedir ]
-    then
-      abort "$basedir exists -- use -f to enforce install"
-    fi
-    ;;
-  "f" )
-    if [ -d $basedir ]
-    then
-      /bin/rm --one-file-system -R $basedir
-    fi
-    ;;
-  * )
-    abort invalid option -$OPTARG  $usage
-    ;;
-  esac
-done
-
-if [ -z "$o" ]
+if [ $EUID -gt 0 ]
 then
-  abort $usage
+  abort "user is not root, please invoke using sudo"
+else
+  echo "okay, running as root" | logo
 fi
 
-log non-shipping mode
-
-log ... mode checked\\n
+echo "... user privileges checked\\n" | log
 
 
 #-------------------------------------------------------------------------------
-# are we root/sudo or what?
+# check mode
 #-------------------------------------------------------------------------------
 
-log checking user privileges ...
+echo "checking mode ..." | log
 
-uid=`/usr/bin/id -u`
-if [ $uid -gt 0 ]
+if [ -d $basedir ]
 then
-  abort user is not root, please invoke using sudo
+  echo "$my_name installation exists, doing update" | logo
+  update=1
+  # use a new dir as (temporary) installation base
+  installdir="${basedir}.update"
+  # unset configuration params (some might be reset by options)
+  password=
+  locale_country=
+  locale_coding=
+  timezone=
+else
+  echo "no $my_name system found, doing first install" | logo
+  update=0
+  installdir=$basedir
 fi
-
-log ... user privileges checked\\n
+ 
+echo "... mode checked\\n" | log
 
 
 #-------------------------------------------------------------------------------
-# check system (model, base directory)
+# check hardware
 #-------------------------------------------------------------------------------
 
-log checking system state ...
+echo "checking hardware ..." | log
 
 model=0
 revision=`/bin/cat /proc/cpuinfo | /bin/grep -i "^Revision" | cut -d':' -f2 | tr -d ' '`
@@ -262,7 +296,7 @@ do
   if [ $rev == $revision ]
   then
     model=2
-    log "running on a Raspberry Pi2 (revision $revision)"
+    echo "running on a Raspberry Pi2 (revision $revision)" | logo
   fi
 done
 for rev in $pi3revisions
@@ -270,70 +304,227 @@ do
   if [ $rev == $revision ]
   then
     model=3
-    log "running on a Raspberry Pi3 (revision $revision)"
+    echo "running on a Raspberry Pi3 (revision $revision)" | logo
   fi
 done
 
 if [ $model -lt 2 ]
 then
-  abort not running on a Raspberry Pi2 or Pi3
+  echo "not running on a Raspberry Pi2 or Pi3 -- no guarantee this might work" | logo
 fi
 
-log ... system state checked\\n
+echo "... hardware checked\\n" | log
+
+
+#-------------------------------------------------------------------------------
+# check options
+#-------------------------------------------------------------------------------
+
+echo "checking options ..." | log
+
+while getopts ":hr:Ll:Tt:s:p:c:" o
+do
+  case "$o" in
+  
+  # help
+  h )
+    echo -e "$help"
+    exit 0
+    ;;
+  # set root password
+  r )
+    if [ -z "$OPTARG" ]
+    then
+      abort "root password must not be empty"
+    fi
+    password=$OPTARG
+    echo "root password is '$password'" | logo
+    ;;
+  # set ssid
+  s )
+    if [ -z "$OPTARG" ]
+    then
+      abort "ssid must not be empty"
+    fi
+    __wlan_ssid=$OPTARG
+    echo "$my_name ssid is '$__wlan_ssid'" | logo
+    ;;
+  # set wifi password
+  p )
+    if [ -z "$OPTARG" ]
+    then
+      abort "wifi password must not be empty"
+    fi
+    __wlan_password=$OPTARG
+    echo "wifi password is '$__wlan_password'" | logo
+    ;;
+  # set wifi channel
+  c )
+    if [ -z "$OPTARG" ]
+    then
+      abort "wifi channel must not be empty"
+    fi
+    if ! expr $OPTARG + 1 &> /dev/null
+    then
+      abort "wifi channel must be a number"
+    fi
+    if [ "$OPTARG" -lt 1 ] || [ "$OPTARG" -gt 14 ]
+    then
+      abort "wifi channel must be number between 1 and 14"
+    fi
+    __wlan_channel=$OPTARG
+    echo "wifi channel is '$__wlan_channel'" | logo
+    ;;
+  # list locales
+  L )
+    echo "available locales:"
+    /usr/bin/locale -a
+    exit
+    ;;
+  # set locale
+  l )
+    if [ -z "$OPTARG" ]
+    then
+      abort "locale must not be empty"
+    fi
+    locale_country="${OPTARG%.*}"
+    locale_coding="${OPTARG#*.}"
+    if [ $locale_country == $locale_coding ]
+    then
+      abort "locale argument must be given as <country.coding>"
+    fi
+    locale_coding=$(echo $locale_coding | /usr/bin/tr '[:lower:]' '[:upper:]')
+    echo "locale is '$locale_country' '$locale_coding'" | logo
+    ;;
+  # list timezones
+  T )
+    echo "available timezones:"
+    /usr/bin/timedatectl list-timezones --no-pager
+    exit
+    ;;
+  # set timezone
+  t )
+    if [ -z "$OPTARG" ]
+    then
+      abort "timezone must not be empty"
+    fi
+    mapfile -t zones < <( /usr/bin/timedatectl list-timezones --no-pager )
+    found=0
+    for zone in "${zones[@]}"
+    do
+      if [ $zone == $OPTARG ]
+      then
+        found=1
+      fi
+    done
+    if [ $found == "0" ]
+    then
+      abort "timezone '$OPTARG' not known (use -T to list known timezones)"
+    fi
+    timezone=$OPTARG
+    echo "timezone is '$timezone'" | logo
+    ;;
+
+  \? )
+    abort "invalid option \"-$OPTARG\" -- $usage"
+    ;;
+    
+  : )
+    abort "option -$OPTARG requires an argument"
+    ;;
+    
+  esac
+done
+
+echo "... options checked\\n" | log
 
 
 #-------------------------------------------------------------------------------
 # set root password
 #-------------------------------------------------------------------------------
 
-log setting root password ...
+echo "setting root password ..." | log
 
-while [ -z "$password" ]
-do
-  echo -n "Root-Passwort: "
-  read password
-done
+if [ -z "$password" ]
+then
+  echo "leaving root password unchanged" | logo
+else
+  echo "using '$password'" | logo
+  result=$(echo -e "$password\n$password" | /usr/bin/passwd root 2>&1)
+  if [ $? -ne 0 ]
+  then
+    echo $result | logo
+    abort "root password not successfully changed"
+  fi
+fi
 
-echo -e "$password\n$password" | /usr/bin/passwd root
-
-log root password set\\n
+echo "... root password set\\n" | log
 
 
 #-------------------------------------------------------------------------------
-# system update goes first
+# system update
 #-------------------------------------------------------------------------------
 
-log updating system ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "updating system ..." | log
 
-log `/usr/bin/apt-get -y update 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-log `/usr/bin/apt-get -y upgrade 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+  /usr/bin/apt-get -y update 2>&1 | logo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/usr/bin/apt-get -y update' terminated with exit code $pista"
+  fi
+  
+  /usr/bin/apt-get -y upgrade 2>&1 | logo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/usr/bin/apt-get -y upgrade' terminated with exit code $pista"
+  fi
 
-log ... system updated\\n
+  echo "... system updated\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # change hostname
 #-------------------------------------------------------------------------------
 
-log changing hostname to $myname ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "changing hostname ..." | log
 
-/bin/cat <<LIMIT1 > /etc/hosts
+  /bin/cat <<LIMIT1 > /etc/hosts
 127.0.0.1   localhost
 127.0.0.1   $myname    
 LIMIT1
-echo $myname > /etc/hostname
-/bin/hostname $myname
-
-log ... hostname changed\\n
+  echo $myname > /etc/hostname
+  /bin/hostname $myname
+  
+  if [ `/bin/hostname` != $myname ]
+  then
+    abort "hostname not successfully changed (hostname is '"`/bin/hostname`"')"
+  else
+    echo "hostname now is '"`/bin/hostname`"'" | logo
+  fi
+  
+  echo "... hostname changed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # change console keyboard and setup
 #-------------------------------------------------------------------------------
 
-log changing console setup ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "changing console setup ..." | log
 
-/bin/cat <<LIMIT1 > /etc/default/keyboard
+  /bin/cat <<LIMIT1 > /etc/default/keyboard
 # KEYBOARD CONFIGURATION FILE
 # Consult the keyboard(5) manual page.
 
@@ -342,7 +533,7 @@ XKBLAYOUT="$keyboard_layout"
 BACKSPACE="guess"
 LIMIT1
 
-/bin/cat <<LIMIT1 > /etc/default/console-setup
+  /bin/cat <<LIMIT1 > /etc/default/console-setup
 # CONFIGURATION FILE FOR SETUPCON
 # Consult the console-setup(5) manual page.
 
@@ -353,101 +544,158 @@ FONTFACE="Fixed"
 FONTSIZE="8x16"
 LIMIT1
 
-/bin/setupcon
+  /bin/setupcon --force --verbose 2>&1 | logo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/bin/setupcon --force --verbose' terminated with exit code $pista"
+  fi
 
-log ... console setup changed\\n
+  echo "... console setup changed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # change locale
 #-------------------------------------------------------------------------------
 
-log changing locale ...
+if [ -n "$locale_country" ] && [ -n "$locale_coding" ]
+then
+  echo "changing locale ..." | log
 
-/bin/rm -rf /usr/lib/locale/locale-archive
-/usr/bin/localedef -i en_GB -c -f UTF-8 -A /usr/share/locale/locale.alias en_GB.UTF-8
-/usr/bin/localedef -i $locale_country -c -f $locale_coding -A /usr/share/locale/locale.alias de_DE.UTF-8
-echo LANG=de_DE.UTF-8 > /etc/default/locale
+  /bin/rm -rf /usr/lib/locale/locale-archive | logoo
+  echo "existing locales removed" | logo
+  
+  /usr/bin/localedef -i en_GB -c -f UTF-8 -A /usr/share/locale/locale.alias en_GB.UTF-8 2>&1 | logoo
+  echo "locale en_GB.UTF-8 created" | logo
+  
+  /usr/bin/localedef -i $locale_country -c -f $locale_coding -A /usr/share/locale/locale.alias $locale_country.$locale_coding 2>&1 | logoo
+  echo "locale $locale_country.$locale_coding created" | logo
+  
+  echo LANG=$locale_country.$locale_coding > /etc/default/locale
+  echo "locale $locale_country.$locale_coding set as default" | logo
 
-log ... locale changed\\n
+  echo "... locale changed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # change timezone
 #-------------------------------------------------------------------------------
 
-log changing timezone ...
+if [ -n "$timezone" ]
+then
+  echo "changing timezone ..." | log
 
-echo $timezone > /etc/timezone 
-log `/usr/sbin/dpkg-reconfigure -f noninteractive tzdata 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-
-log ... timezone changed\\n
+  echo $timezone > /etc/timezone 
+  /usr/sbin/dpkg-reconfigure -f noninteractive tzdata 2>&1 | logo
+  echo "timezone now is "`/bin/date +%Z` | logo
+  
+  echo "... timezone changed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
-# install packages
+# install raspbian packages
 #-------------------------------------------------------------------------------
 
-log installing packages ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "installing raspbian packages ..." | log
 
-for i in ${!set_selections[*]}
-do
-  echo ${set_selections[$i]} | /usr/bin/debconf-set-selections
-done
+  for i in ${!set_selections[*]}
+  do
+    echo ${set_selections[$i]} | /usr/bin/debconf-set-selections | logo
+  done
 
-log `/usr/bin/apt-get -y install $packages 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+  /usr/bin/apt-get -y install $packages 2>&1 | logo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/usr/bin/apt-get -y install' terminated with exit code $pista"
+  fi
 
-log ... packages installed\\n
+  echo "... raspbian packages installed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # disable services
 #-------------------------------------------------------------------------------
 
-log disabling services ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "disabling services ..." | log
 
-log `/bin/systemctl disable $services 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-
-log ... services disabled\\n
+  for service in $services
+  do
+    /bin/systemctl disable $service 2>&1 | logoo
+    pista=${PIPESTATUS[0]}
+    if [ $pista -ne 0 ]
+    then
+      abort "'/bin/systemctl disable $service' terminated with exit code $pista"
+    else
+      echo "service $service disabled" | logo
+    fi
+  done
+  
+  echo "... services disabled\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # configure networking
 #-------------------------------------------------------------------------------
 
-log configuring networking ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "configuring networking ..." | log
 
-/bin/cat <<LIMIT1 > /etc/network/interfaces
+  /bin/cat <<LIMIT1 > /etc/network/interfaces
 auto lo
 iface lo inet loopback
 LIMIT1
-
-log ... networking configured\\n
+  echo "network configuration is:" | logo
+  /bin/cat /etc/network/interfaces | logoo
+  echo "... networking configured\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # configure tmpfs
 #-------------------------------------------------------------------------------
 
-log configuring tmpfs ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "configuring tmpfs ..." | log
 
-/bin/cat <<LIMIT1 > /etc/default/tmpfs
+  /bin/cat <<LIMIT1 > /etc/default/tmpfs
 RAMLOCK=no
 RAMSHM=no
 RAMTMP=yes
 RUN_SIZE=50%
 LIMIT1
+  echo "tmpfs configuration is:" | logo
+  /bin/cat /etc/default/tmpfs | logoo
 
-log ... tmpfs configured\\n
+  echo "... tmpfs configured\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # configure mounts
 #-------------------------------------------------------------------------------
 
-log configuring mounts ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "configuring mounts ..." | log
 
-/bin/cat <<LIMIT1 > /etc/fstab
+  /bin/cat <<LIMIT1 > /etc/fstab
 proc            /proc         proc    defaults                                    0 0
 /dev/mmcblk0p1  /boot         vfat    ro                                          0 2
 /dev/mmcblk0p2  /             ext4    defaults,noatime                            0 1
@@ -455,76 +703,127 @@ tmpfs           /tmp          tmpfs   defaults,noatime,nosuid,mode=0777,size=50%
 tmpfs           /var/log      tmpfs   defaults,noatime,nosuid,mode=0777,size=50%  0 0
 tmpfs           $basedir/tmp  tmpfs   defaults,noatime,nosuid,mode=0777,size=50%  0 0
 LIMIT1
+  echo "mount configuration is:" | logo
+  /bin/cat /etc/fstab | logoo
 
-log ... mounts configured\\n
+  echo "... mounts configured\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # get dns root hints
 #-------------------------------------------------------------------------------
 
-log getting dns root hints ...
-
-if ! [ -d /etc/bind ]
+# do this only on first install
+if [ $update -eq 0 ]
 then
-  mkdir /etc/bind
-fi
-log `/usr/bin/wget http://www.orsn.org/roothint/root-hint.txt -O /etc/bind/db.orsn 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+  echo "getting dns root hints ..." | log
 
-log ... got dns root hints\\n
+  tmphints="/tmp/hints"
+  rm -f $tmphints
+
+  if ! [ -d /etc/bind ]
+  then
+    mkdir /etc/bind
+  fi
+
+  /usr/bin/wget $hintsurl -O $tmphints 2>&1 | logo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/usr/bin/wget $hintsurl -O $tmphints' terminated with exit code $pista"
+  else
+    if ! [ -s "$tmphints" ]
+    then
+      abort "file $tmphints is empty"
+    else
+      mv $tmphints /etc/bind/db.orsn
+      echo "dns root hints are:" | logo
+      /bin/cat /etc/bind/db.orsn | logoo
+    fi
+  fi
+
+  echo "... got dns root hints\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # change name resolver
 #-------------------------------------------------------------------------------
 
-log changing name resolver ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "changing name resolver ..." | log
 
-echo nameserver 127.0.0.1 > /etc/resolv.conf
+  echo nameserver 127.0.0.1 > /etc/resolv.conf
 
-/bin/cat <<LIMIT1 > /etc/resolvconf.conf
+  /bin/cat <<LIMIT1 > /etc/resolvconf.conf
 resolv_conf_local_only=YES
 name_servers=127.0.0.1
 LIMIT1
+  echo "mount configuration is:" | logo
+  /bin/cat /etc/fstab | logoo
 
-if ! [ -d /etc/dhcp ]
-then
-  mkdir /etc/dhcp
-fi
-if ! [ -d /etc/dhcp/dhclient-enter-hooks.d ]
-then
-  mkdir /etc/dhcp/dhclient-enter-hooks.d
-fi
-/bin/cat <<LIMIT1 > /etc/dhcp/dhclient-enter-hooks.d/resolv
+  if ! [ -d /etc/dhcp ]
+  then
+    mkdir /etc/dhcp
+  fi
+  if ! [ -d /etc/dhcp/dhclient-enter-hooks.d ]
+  then
+    mkdir /etc/dhcp/dhclient-enter-hooks.d
+  fi
+  /bin/cat <<LIMIT1 > /etc/dhcp/dhclient-enter-hooks.d/resolv
 make_resolv_conf() 
 {
   echo nameserver 127.0.0.1 > /etc/resolv.conf
 }
 LIMIT1
 
-log ... name resolver changed\\n
+  echo "... name resolver changed\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
-# make base directory
+# make installation directory
 #-------------------------------------------------------------------------------
 
-log making base directory ...
+echo "making installation directory ..." | log
 
-/bin/mkdir $basedir
+if [ -d $installdir ]
+then
+  abort "directory '$installdir' exists"
+fi
+/bin/mkdir $installdir
+if ! [ -d $installdir ]
+then
+  abort "couldn't create directory '$installdir'"
+else
+  echo "directory '$installdir' created" | logo
+fi
 
-log ... made base directory\\n
+echo "... made base directory\\n" | log
 
 
 #-------------------------------------------------------------------------------
 # install software
 #-------------------------------------------------------------------------------
 
-log installing software ...
+echo "installing software ..." | log
 
-log `/bin/tar xjvf $myname.tar.bz2 -C $basedir 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+if ! [ -e $myname.tar.bz2 ]
+then
+  abort "software file '$myname.tar.bz2' not found"
+fi
 
-log ... software installed\\n
+/bin/tar xjvf $myname.tar.bz2 -C $installdir 2>&1 | logo
+pista=${PIPESTATUS[0]}
+if [ $pista -ne 0 ]
+then
+  abort "'/bin/tar xjvf $myname.tar.bz2 -C $installdir' terminated with exit code $pista"
+fi
+
+echo "... software installed\\n" | log
 
 
 #-------------------------------------------------------------------------------
@@ -533,104 +832,182 @@ log ... software installed\\n
 # might well be distro spedific!
 #-------------------------------------------------------------------------------
 
-log patching udev rule file ...
+echo "patching udev rule file ..." | log
 
-log `/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+# reverse previous patch first (only on update install)
+if [ $update -eq 1 ]
+then
+  /usr/bin/patch -R /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | logoo
+  pista=${PIPESTATUS[0]}
+  if [ $pista -ne 0 ]
+  then
+    abort "'/usr/bin/patch -R /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch' terminated with exit code $pista"
+  else
+    echo "successfully reversed previous patch" | logo
+  fi
+fi
 
-log ... udev rule file patched\\n
+/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $installdir/40-usb_modeswitch.rules.patch 2>&1 | logoo
+pista=${PIPESTATUS[0]}
+if [ $pista -ne 0 ]
+then
+  abort "'/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $installdir/40-usb_modeswitch.rules.patch' terminated with exit code $pista"
+else
+  echo "successfully applied patch file:" | logo
+  /bin/cat $installdir/40-usb_modeswitch.rules.patch | logoo
+fi
+
+echo "... udev rule file patched\\n" | log
 
 
 #-------------------------------------------------------------------------------
 # patch and make sslsplit
 #-------------------------------------------------------------------------------
 
-log making sslsplit ...
+echo "installing sslsplit ..." | log
 
-log `/bin/tar xjvf $basedir/sslsplit-latest.tar.bz2 -C $basedir 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
+echo "unpacking software ..." | logo
+/bin/tar xjvf $installdir/sslsplit-latest.tar.bz2 -C $installdir 2>&1 | logoo
+pista=${PIPESTATUS[0]}
+if [ $pista -ne 0 ]
+then
+  abort "'bin/tar xjvf $installdir/sslsplit-latest.tar.bz2 -C $installdir' terminated with exit code $pista"
+fi
+sslsplit=`ls -d1 $installdir/sslsplit* | grep -v sslsplit-latest.tar.bz2`
+sslsplitbase=`basename $sslsplit`
+echo "installation directory is '$sslsplit'" | logoo
+echo "... software unpacked" | logo
 
-sslsplit=`ls -d1 $basedir/sslsplit* | grep -v sslsplit-latest.tar.bz2`
-log `/usr/bin/patch $sslsplit/pxyconn.c $basedir/pxyconn.c.patch 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-log `/usr/bin/make -C $sslsplit 2>&1 | /bin/sed 's/^/\\\\n\\\\t/g'`
-ln -s $sslsplit/sslsplit $basedir/sslsplit
+echo "patching pxyconn.c ..." | logo
+/usr/bin/patch $sslsplit/pxyconn.c $installdir/pxyconn.c.patch 2>&1 | logoo
+pista=${PIPESTATUS[0]}
+if [ $pista -ne 0 ]
+then
+  abort "'/usr/bin/patch $sslsplit/pxyconn.c $installdir/pxyconn.c.patch' terminated with exit code $pista"
+fi
+echo "... pxyconn.c patched" | logo
 
-log ... sslsplit made\\n
+echo "making sslslpit ..." | logo
+/usr/bin/make -C $sslsplit 2>&1 | logoo
+pista=${PIPESTATUS[0]}
+if [ $pista -ne 0 ]
+then
+  abort "'/usr/bin/make -C $sslsplit' terminated with exit code $pista"
+fi
+(cd $installdir; ln -s $sslsplitbase/sslsplit sslsplit)
+echo "... sslslpit made" | logo
+
+echo "... sslsplit installed\\n" | log
 
 
 #-------------------------------------------------------------------------------
 # make configuration file
 #-------------------------------------------------------------------------------
 
-log making configuration file ...
+echo "making configuration file ..." | log
 
-/bin/cat <<LIMIT1 > $basedir/$config_file
+# on update install read config values from exisiting installation
+if [ $update -eq 1 ]
+then
+  if ! [ -e $basedir/$config_file ]
+  then
+    abort "couldn't find existing configuration file '$basedir/$config_file'"
+  else
+    . $basedir/$config_file
+    echo "existing configuration used" | logo
+  fi
+fi
+
+/bin/cat <<LIMIT1 > $installdir/$config_file
 #!/bin/bash
 
-### Ansicht und Verhalten
-# Boxen
+### look and feel
+
+# utility boxes
 __suchbox="$__suchbox"
 __dekodbox="$__dekodbox"
 __whoisbox="$__whoisbox"
 __usetabs="$__usetabs"
-# Skin
+
+# skin
 __skin="$__skin"
-# Tabellen
+
+# tables
 __klick="$__klick"
 __zeilen="$__zeilen"
-# Debug-Infos
+
+# debug
 __debug="0"
 
+
 ### DNS
-# eigener Hostname
+
+# own host name
 __dns_server_name="$__dns_server_name"
-# eigener Domainname
+
+# own domain name
 __dns_domain_name="$__dns_domain_name"
 
+
 ### WLAN
-# eigene SSID
+
+# own wifi's SSID
 __wlan_ssid="$__wlan_ssid"
-# Passwort des eigenen WLAN
+
+# own wifi's password
 __wlan_password="$__wlan_password"
-# Kanal des eigenen WLAN
+
+# own wifi's channel
 __wlan_channel="$__wlan_channel"
 
-### Netzwerk
-# erstes Oktet
-__ip_ip1="$__ip_ip1"
-# zweites Oktet
-__ip_ip2="$__ip_ip2"
-# drittes Oktet
-__ip_ip3="$__ip_ip3"
-# Netzmaske (konstant)
-__ip_mask="255.255.255.0"
-# eigene Adresse (konstant)
-__ip_ip="1"
-# Start des DHCP-Bereichs (konstant)
-__ip_dhcp1="2"
-# Ende des DHCP-Bereichs (konstant)
-__ip_dhcp2="254"
 
-### Internet
-# Routing
+### network
+
+# first .. third octets
+__ip_ip1="$__ip_ip1"
+__ip_ip2="$__ip_ip2"
+__ip_ip3="$__ip_ip3"
+
+# netmask
+__ip_mask="$__ip_mask"
+
+# own address
+__ip_ip="$__ip_ip"
+
+# DHCP range
+__ip_dhcp1="$__ip_dhcp1"
+__ip_dhcp2="$__ip_dhcp2"
+
+
+### internet
+
+# routing
 __internet_aufzeichnung="$__internet_aufzeichnung"
-# Ports, auf denen unverschlüsselter Verkehr abgehört werden soll
+
+# ports to listen for unencrypted traffic for
 __tcp_ports="$__tcp_ports"
-# Ports, auf denen verschlüsselter Verkehr abgehört werden soll
+
+# ports to listen for encrypted traffic for
 __ssl_ports="$__ssl_ports"
-# umts provider (konstant)
-__umts="Tchibo Mobil:webmobil1;O2:pinternet.interkom.de;Vodafone:web.vodafone.de"
+
+# list of umts providers
+__umts="$__umts"
 
 LIMIT1
 
-log ... configuration file made\\n
+echo "configuration file '$installdir/$config_file' is:" | logo
+/bin/cat $installdir/$config_file | logoo
+
+echo "... configuration file made\\n" | log
 
 
 #-------------------------------------------------------------------------------
 # make constants file
 #-------------------------------------------------------------------------------
 
-log making constants file ...
+echo "making constants file ..." | log
 
-/bin/cat <<LIMIT1 > $basedir/$constants_file
+/bin/cat <<LIMIT1 > $installdir/$constants_file
 #!/bin/bash
 
 # develop mode?
@@ -649,9 +1026,9 @@ wireless_interface="${myname}wlan"
 # base dir
 base_dir="$basedir"
 # tmp dir for config files etc
-temp_dir="$tempdir"
+temp_dir="$basedir/$tempdir"
 # data dir for database etc
-data_dir="$basedir/data"
+data_dir="$basedir/$datadir"
 # name of configuration file
 config_file="$config_file"
 # name of constants file
@@ -693,7 +1070,7 @@ tcpdump_output="tcpdump.output"
 tcpdump_pid="tcpdump.pid"
 
 # location of log file for start script
-logfile="$tempdir/$my_name.log"
+logfile="$basedir/$tempdir/$my_name.log"
 
 # location of CA key file for SSLsplit
 key_file="$basedir/cert.key"
@@ -701,28 +1078,28 @@ key_file="$basedir/cert.key"
 cert_file="$basedir/cert.crt"
 
 # location of config and pid files for sshd server
-sshd_configfile="$tempdir/sshd.conf"
-sshd_pidfile="$tempdir/sshd.pid"
+sshd_configfile="$basedir/$tempdir/sshd.conf"
+sshd_pidfile="$basedir/$tempdir/sshd.pid"
 
 # location of config and db files for bind name server
-bind_configfile="$tempdir/named.conf"
-bind_forwardfile="$tempdir/named.forward"
-bind_reversefile="$tempdir/named.reverse"
+bind_configfile="$basedir/$tempdir/named.conf"
+bind_forwardfile="$basedir/$tempdir/named.forward"
+bind_reversefile="$basedir/$tempdir/named.reverse"
 
 # location of config, lease and pid files for dhcpd
-dhcpd_configfile="$tempdir/dhcpd.conf"
-dhcpd_pidfile="$tempdir/dhcpd.pid"
-dhcpd_leasefile="$tempdir/dhcpd.leases"
+dhcpd_configfile="$basedir/$tempdir/dhcpd.conf"
+dhcpd_pidfile="$basedir/$tempdir/dhcpd.pid"
+dhcpd_leasefile="$basedir/$tempdir/dhcpd.leases"
 
 # location of lease and pid files for dhclient
-dhclient_pidfile="$tempdir/dhclient.pid"
-dhclient_leasefile="$tempdir/dhclient.leases"
+dhclient_pidfile="$basedir/$tempdir/dhclient.pid"
+dhclient_leasefile="$basedir/$tempdir/dhclient.leases"
 
 # location of config file for hostapd
-hostapd_configfile="$tempdir/hostapd.conf"
+hostapd_configfile="$basedir/$tempdir/hostapd.conf"
 
 # location of config file for lighttpd
-lighttpd_configfile="$tempdir/lighttpd.conf"
+lighttpd_configfile="$basedir/$tempdir/lighttpd.conf"
 # server root for lighttpd
 lighttpd_root="$basedir/www"
 # port for lighttpd
@@ -731,11 +1108,11 @@ lighttpd_port="80"
 skin_dir="css/skin/"
 
 # location of config file for mysqld
-mysqld_configfile="$tempdir/mysqld.conf"
+mysqld_configfile="$basedir/$tempdir/mysqld.conf"
 # location of pid file for mysqld
-mysqld_pidfile="$tempdir/mysqld.pid"
+mysqld_pidfile="$basedir/$tempdir/mysqld.pid"
 # DB root
-mysqld_datadir="$datadir/mysql"
+mysqld_datadir="$basedir/$datadir/mysql"
 # database name
 database_name="$myname"
 # port for mysqld
@@ -748,56 +1125,94 @@ ciphers_initfile="$basedir/ciphers.sql"
 ciphersuites_cmd="/usr/bin/php5 $basedir/ciphersuites.php $basedir ciphersuites.txt"
 
 # location of script to open internet connection
-online_script="$tempdir/online.sh"
+online_script="$basedir/$tempdir/online.sh"
 # location of script to close internet connection
-offline_script="$tempdir/offline.sh"
+offline_script="$basedir/$tempdir/offline.sh"
 # location of flag file indicating having been online at least once after (re)start
-online_flag="$tempdir/online_flag"
+online_flag="$basedir/$tempdir/online_flag"
 
 # location of config file for wvdial
-wvdial_configfile="$tempdir/wvdial.conf"
+wvdial_configfile="$basedir/$tempdir/wvdial.conf"
 # location of config file for wpa_supplicant
-wpa_supplicant_configfile="$tempdir/wpa_supplicant.conf"
+wpa_supplicant_configfile="$basedir/$tempdir/wpa_supplicant.conf"
 
 # location of run file for session
-session_file="$tempdir/session.run"
+session_file="$basedir/$tempdir/session.run"
 
 # location of image file for meta data extraction
-image_file="$tempdir/image"
+image_file="$basedir/$tempdir/image"
 
 # location of zip file for export and import
-export_file="$datadir/archiv.zip"
+export_file="$basedir/$datadir/archiv.zip"
 
 # name of file containing meta infos in export archive
 meta_file="meta.xml"
 
 LIMIT1
 
-log ... constants file made\\n
+echo "constants file '$installdir/$constants_file' is:" | logo
+/bin/cat $installdir/$constants_file | logoo
+
+echo "... constants file made\\n" | log
+
+
+#-------------------------------------------------------------------------------
+# copy certificate
+#-------------------------------------------------------------------------------
+
+# do this only on update install
+if [ $update -eq 1 ]
+then
+  echo "copying certificate ..." | log
+  
+  if [ -e $basedir/cert.key ] && [ -e $basedir/cert.crt ]
+  then
+    cp $basedir/cert.key $installdir/cert.key
+    cp $basedir/cert.crt $installdir/cert.crt
+    echo "found cert.key, cert.crt" | logo
+  else
+    echo "no certificate found" | logo
+  fi
+  echo "... certificate copied\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # activate start script
 #-------------------------------------------------------------------------------
 
-log activating start script ...
+# do this only on first install
+if [ $update -eq 0 ]
+then
+  echo "activating start script ..." | log
 
-/bin/cat <<LIMIT1 > /etc/rc.local
+  /bin/cat <<LIMIT1 > /etc/rc.local
 #!/bin/sh -e
 /bin/bash $basedir/start.sh $model &
 exit 0
 LIMIT1
+  echo "/etc/rc.local is now:" | logo
+  /bin/cat /etc/rc.local | logoo
 
-log ... start script activated\\n
+  echo "... start script activated\\n" | log
+fi
 
 
 #-------------------------------------------------------------------------------
 # reboot
 #-------------------------------------------------------------------------------
 
-log rebooting ...
-
-/sbin/reboot
+# reboot only on first install
+if [ $update -eq 0 ]
+then
+  echo "rebooting ..." | log
+  /sbin/reboot
+# on update install switch directories and exit normally
+else
+  mv $basedir ${basedir}.old
+  mv $installdir $basedir
+  exit 0
+fi
 
 
 

@@ -35,7 +35,7 @@ require ("include/htmlstart.php");
 require ("include/topmenu.php");
 require ("include/database.php");
 
-titelHilfe ("Datenbank leeren", <<<LIMIT1
+titleAndHelp ("Datenbank leeren", <<<LIMIT1
 Wenn sämtliche Aufzeichnungen gelöscht werden sollen, ist das Löschen der Datenbank der schnellste Weg.
 Optional können auch die Geräte und die Whois-Informationen entfernt werden.
 LIMIT1

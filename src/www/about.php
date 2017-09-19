@@ -26,8 +26,7 @@ require ("include/http.php");
 require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
-
-function section ($id, $titel)
+function section ( $id, $titel )
 {
   echo <<<LIMIT1
     <div class="panel panel-primary">
@@ -41,7 +40,7 @@ function section ($id, $titel)
 LIMIT1;
 }
 
-function lizenz ($produkt, $info, $lizenz="")
+function lizenz ( $produkt, $info, $lizenz = "" )
 {
   echo <<<LIMIT1
     <div class="panel panel-info">
@@ -52,11 +51,11 @@ function lizenz ($produkt, $info, $lizenz="")
       </div>
       <div class="panel-body">
 LIMIT1;
-  if ($info != "")
+  if ( $info != "" )
   {
     echo "<p>$info</p>";
   }
-  if ($lizenz != "")
+  if ( $lizenz != "" )
   {
     echo "<pre class=\"pre-scrollable\">$lizenz</pre>";
   }
@@ -66,20 +65,19 @@ LIMIT1;
 LIMIT1;
 }
 
-
-titelHilfe ("Über $my_name","");
+titleAndHelp ( "Über $my_name", "" );
 
 echo <<<LIMIT1
 <div class="row">
   <div class="panel-group" id="about" role="tablist">
 LIMIT1;
-      
+
 
 // Copyright
-section ("cr", "Copyright");
+section ( "cr", "Copyright" );
 
 echo <<<LIMIT1
-      </p>&copy; Ulrich Kühn 2016</p>
+      </p>&copy; Ulrich Kühn 2017</p>
     </div>
   </div>
 </div>
@@ -87,22 +85,22 @@ LIMIT1;
 
 
 // Lizenzen
-section ("li","Verwendete Software Dritter");
+section ( "li", "Verwendete Software Dritter" );
 
 # Raspbian
-lizenz ("Raspbian"
-        , <<<LIMIT1
+lizenz ( "Raspbian"
+    , <<<LIMIT1
 Siehe <a href="https://www.raspbian.org/" target="_blank">https://www.raspbian.org/</a>.<br>
 Es gelten die jeweiligen Lizenzbestimmungen der einzelnen Debian-Komponenten. Für Details siehe <a href="https://www.debian.org/legal/licenses/" target="_blank">https://www.debian.org/legal/licenses/</a>.
 LIMIT1
-       );
-       
+);
+
 # SSLsplit
-lizenz ("SSLsplit"
-        , <<<LIMIT1
+lizenz ( "SSLsplit"
+    , <<<LIMIT1
 Siehe <a href="https://www.roe.ch/SSLsplit" target="_blank">https://www.roe.ch/SSLsplit</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright
 Copyright (c) 2009-2016, Daniel Roethlisberger and contributors. All rights reserved. Licensed under the 2-clause BSD license contained herein.
 Third-party components
@@ -123,14 +121,14 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        
 LIMIT1
-       );
-             
+);
+
 # Bootstrap
-lizenz ("Bootstrap"
-        , <<<LIMIT1
+lizenz ( "Bootstrap"
+    , <<<LIMIT1
 Siehe <a href="https://github.com/twbs/bootstrap" target="_blank">https://github.com/twbs/bootstrap</a> und <a href="http://getbootstrap.com/" target="_blank">http://getbootstrap.com/</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 The MIT License (MIT)
 
 Copyright (c) 2011-2016 Twitter, Inc.
@@ -153,23 +151,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 LIMIT1
-       );
-       
+);
+
 # Font Awesome
-lizenz ("Font Awesome by Dave Gandy"
-        , <<<LIMIT1
+lizenz ( "Font Awesome by Dave Gandy"
+    , <<<LIMIT1
 Siehe <a href="http://fontawesome.io" target="_blank">http://fontawesome.io</a>
 <br>Lizenz für die Fonts: <a href="http://scripts.sil.org/OFL" target="_blank">SIL OFL 1.1</a>
 <br>Lizenz für CSS und andere Dateien: <a href="http://opensource.org/licenses/mit-license.html" target="_blank">MIT License</a>
 LIMIT1
-        , "" );
-       
+    , "" );
+
 # jQuery
-lizenz ("jQuery"
-        , <<<LIMIT1
+lizenz ( "jQuery"
+    , <<<LIMIT1
 Siehe <a href="http://jquery.com/" target="_blank">http://jquery.com/</a> und <a href="https://github.com/jquery/jquery" target="_blank">https://github.com/jquery/jquery</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright jQuery Foundation and other contributors, https://jquery.org/
 
 Permission is hereby granted, free of charge, to any person obtaining
@@ -191,14 +189,14 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 LIMIT1
-       );
-      
+);
+
 # DataTables
-lizenz ("DataTables Table plug-in for jQuery"
-        , <<<LIMIT1
+lizenz ( "DataTables Table plug-in for jQuery"
+    , <<<LIMIT1
 Siehe <a href="https://datatables.net/" target="_blank">https://datatables.net/</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright (C) 2008-2016, SpryMedia Ltd.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
@@ -213,14 +211,14 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 LIMIT1
-       );
-       
+);
+
 # jQuery.Syntax
-lizenz ("jQuery.Syntax"
-        , <<<LIMIT1
+lizenz ( "jQuery.Syntax"
+    , <<<LIMIT1
 Siehe <a href="http://www.codeotaku.com/projects/jquery-syntax/index" target="_blank">http://www.codeotaku.com/projects/jquery-syntax/index</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright (c) 2011 Samuel G. D. Williams.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
@@ -235,14 +233,43 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 LIMIT1
-       );
-       
+);
+
+# Parsedown
+lizenz ( "Parsedown - Markdown Parser in PHP"
+    , <<<LIMIT1
+Siehe <a href="https://github.com/erusev/parsedown" target="_blank">https://github.com/erusev/parsedown</a> und <a href="http://parsedown.org" target="_blank">http://parsedown.org</a>
+LIMIT1
+    , <<<LIMIT1
+The MIT License (MIT)
+
+Copyright (c) 2013 Emanuil Rusev, erusev.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+LIMIT1
+);
+
 # Bootswatch themes
-lizenz ("Bootswatch - Free themes for Bootstrap"
-        , <<<LIMIT1
+lizenz ( "Bootswatch - Free themes for Bootstrap"
+    , <<<LIMIT1
 Siehe <a href="https://bootswatch.com/" target="_blank">https://bootswatch.com/</a> und <a href="https://github.com/thomaspark/bootswatch" target="_blank">https://github.com/thomaspark/bootswatch</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 The MIT License (MIT)
 
 Copyright (c) 2013 Thomas Park
@@ -265,14 +292,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 LIMIT1
-          );
-         
+);
+
 # Fonts
-lizenz ("Lato Font"
-        , <<<LIMIT1
+lizenz ( "Lato Font"
+    , <<<LIMIT1
 Siehe <a href="http://www.latofonts.com/" target="_blank">http://www.latofonts.com/</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright (c) 2010-2014 by tyPoland Lukasz Dziedzic (team@latofonts.com) with Reserved Font Name "Lato"
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -367,13 +394,13 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
-          );
+);
 
-lizenz ("News Cycle Font"
-        , <<<LIMIT1
+lizenz ( "News Cycle Font"
+    , <<<LIMIT1
 Siehe <a href="https://launchpad.net/newscycle" target="_blank">https://launchpad.net/newscycle</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright (c) 2010-2011, Nathan Willis (nwillis@glyphography.com), with Reserved Font Name "News Cycle."
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -468,13 +495,13 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.        
 LIMIT1
-          );
-        
-lizenz ("Open Sans Font"
-        , <<<LIMIT1
+);
+
+lizenz ( "Open Sans Font"
+    , <<<LIMIT1
 Siehe <a href="http://www.opensans.com/" target="_blank">http://www.opensans.com/</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 
                                  Apache License
                            Version 2.0, January 2004
@@ -678,12 +705,12 @@ LIMIT1
    See the License for the specific language governing permissions and
    limitations under the License.        
 LIMIT1
-          );
+);
 
-lizenz ("Raleway Font"
-        , <<<LIMIT1
+lizenz ( "Raleway Font"
+    , <<<LIMIT1
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright (c) 2010, Matt McInerney (matt@pixelspread.com),
 Copyright (c) 2011, Pablo Impallari (www.impallari.com|impallari@gmail.com),
 Copyright (c) 2011, Rodrigo Fuenzalida (www.rfuenzalida.com|hello@rfuenzalida.com), with Reserved Font Name Raleway
@@ -780,13 +807,13 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
-          );
-          
-lizenz ("Roboto Font"
-        , <<<LIMIT1
+);
+
+lizenz ( "Roboto Font"
+    , <<<LIMIT1
 Siehe <a href="https://material.io/guidelines/resources/roboto-noto-fonts.html" target="_blank">https://material.io/guidelines/resources/roboto-noto-fonts.html</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 
                                  Apache License
                            Version 2.0, January 2004
@@ -990,13 +1017,13 @@ LIMIT1
    See the License for the specific language governing permissions and
    limitations under the License.
 LIMIT1
-          );
-          
-lizenz ("Source Sans Pro Font"
-        , <<<LIMIT1
+);
+
+lizenz ( "Source Sans Pro Font"
+    , <<<LIMIT1
 Siehe <a href="https://github.com/adobe-fonts/source-sans-pro" target="_blank">https://github.com/adobe-fonts/source-sans-pro</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 Copyright 2010, 2012, 2014 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'. All Rights Reserved. Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -1091,13 +1118,13 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
-          );
+);
 
-lizenz ("Ubuntu Font"
-        , <<<LIMIT1
+lizenz ( "Ubuntu Font"
+    , <<<LIMIT1
 Siehe <a href="http://font.ubuntu.com/" target="_blank">http://font.ubuntu.com/</a>
 LIMIT1
-        , <<<LIMIT1
+    , <<<LIMIT1
 -------------------------------
 UBUNTU FONT LICENCE Version 1.0
 -------------------------------
@@ -1195,8 +1222,8 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM OTHER
 DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
-          );
-          
+);
+
 echo <<<LIMIT1
         </div>
       </div>
@@ -1205,12 +1232,12 @@ LIMIT1;
 
 
 // Startprotokoll
-if ($__debug)
+if ( $__debug )
 {
-  section ("sp","Startprotokoll");
+  section ( "sp", "Startprotokoll" );
 
   echo "<pre class=\"pre-scrollable\">";
-  echo file_get_contents ($logfile);
+  echo file_get_contents ( $logfile );
   echo "</pre>";
   echo "</div></div></div>";
 }
@@ -1218,5 +1245,4 @@ if ($__debug)
 echo "</div></div>";
 
 require ("include/htmlend.php");
-
 ?>

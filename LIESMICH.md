@@ -86,6 +86,23 @@ Anschließend ausführen
 
 `$ sudo bash ./limitify.sh`
 
+Dabei können zusätzlich folgende Optionen verwendet werden:
+
+Option| Parameter | Bedeutung
+---|---|---
+-r | password | set root password
+-l | country.coding | set system locale
+-L | | list available locales and exit
+-t | timezone | set system timezone
+-T | | list available timezones and exit
+-s | ssid | set default ssid for LiMiT1 wifi
+-p | password | set default password for LiMiT1 wifi
+-c | channel | set default wifi channel
+
+Soll z.B. der WLAN-Kanal auf 10 und die Zeitzone auf Madrid gesetzt werden, müssen folgende Optionen ergänzt werden:
+
+`$ sudo bash ./limitify.sh -c 10 -t "Europe/Madrid"`
+
 Das Skript führt eine Vielzahl von Operationen - insbesondere ein System-Update - durch, so dass der Gesamtvorgang (je nach Hardware, Internetgeschwindigkeit und Aktualisierungsbedarf) mehrere (bis zu 30) Minuten dauern kann. Dabei scheint das System immer wieder lange Zeit inaktiv zu sein. Dies ist jedoch nicht der Fall, wie der Blick auf die grüne SYstem-LED zeigt. Sie flackert jeweils, um die entsprechenden Schreibzugriffe auf die SD-Karte zu signalisieren. 
 
 Nach Abschluss des Vorgangs rebootet das System. Es ist ein zusätzlicher Nutzer `root` mit Passwort `limit1` eingerichtet, der für den Systemzugriff verwendet werden kann (hierfür steht über das WLAN-Interface auch ein SSH-Server zur Verfügung). Es ist nun auch das deutsche Tastaturlayout wie gewohnt verwendbar. 
@@ -313,6 +330,10 @@ Mit dieser Funktion kann LiMiT1 individuell angepasst werden.
 ### Status
 
 Über diese Funktion sind detaillierte Systeminformationen abrufbar.
+
+### Updates
+
+Es wird online überprüft, ob eine neue Version verfügbar ist. Neue Versionen können direkt installiert und LiMiT1 so auf den neusten Stand gebracht werden.
 
 ### Über LiMiT1
 

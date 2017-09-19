@@ -85,7 +85,7 @@ LIMIT1;
 }
 
 
-titelHilfe ("Einstellungen", <<<LIMIT1
+titleAndHelp ("Einstellungen", <<<LIMIT1
 Das $my_name-System kann in vielen Aspekten konfiguriert werden.
 Detaillierte Informationen zu den Einstellungen und ihrer Bedeutung sind in den jeweiligen
 Abschnitten enthalten.

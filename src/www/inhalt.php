@@ -58,7 +58,7 @@ $select_s = $db->prepare ("select eigenschaft.wert from geraet,eigenschaft where
 $select_s->execute(array($aufzeichnung["geraet"]));
 $eigenschaften = $select_s->fetchAll(PDO::FETCH_COLUMN, 0);
 
-titelHilfe ("Inhaltdetails", <<<LIMIT1
+titleAndHelp ("Inhaltdetails", <<<LIMIT1
 LIMIT1
 );
 

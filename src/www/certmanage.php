@@ -55,7 +55,7 @@ LIMIT1;
 
 
 
-titelHilfe ("Zertifikatsverwaltung", <<<LIMIT1
+titleAndHelp ("Zertifikatsverwaltung", <<<LIMIT1
 Das $my_name-Zertifikat dient dazu, per SSL verschlüsselten Datenverkehr analysieren zu können.
 Dazu tauscht $my_name in bestehenden Verbindungen das Zertifikat des Servers im Internet gegen das
 eigene aus. Da für dieses Zertifikat auch der private Schlüssel existiert, können die von dem

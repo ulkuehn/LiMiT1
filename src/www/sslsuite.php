@@ -42,7 +42,7 @@ $mac_s->execute (array($suite["mac"]));
 $mac = $mac_s->fetch();
 
 
-titelHilfe ("Verschlüsselungsdetails", <<<LIMIT1
+titleAndHelp ("Verschlüsselungsdetails", <<<LIMIT1
 LIMIT1
 );
 

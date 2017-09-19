@@ -49,7 +49,7 @@ else
   $subject = $zertifikat["subject"];
 }
 
-titelHilfe ("Zertifikatdetails", <<<LIMIT1
+titleAndHelp ("Zertifikatdetails", <<<LIMIT1
 LIMIT1
 );
 

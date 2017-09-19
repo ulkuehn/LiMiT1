@@ -28,46 +28,45 @@ require ("include/configuration.php");
 
 $ok = 0;
 
-if (file_exists ($online_script))
+if ( file_exists ( $online_script ) )
 {
-  exec ("/bin/bash $online_script");
-  sleep (2);
+  exec ( "/bin/bash $online_script" );
+  sleep ( 2 );
 
-  $fp = fsockopen("udp://pool.ntp.org", 123, $errno, $errstr, 10);
-  if ($fp)
+  $fp = fsockopen ( "udp://pool.ntp.org", 123, $errno, $errstr, 10 );
+  if ( $fp )
   {
-    fclose($fp);
-    
-    exec ("/usr/sbin/service ntp stop");
-    exec ("/bin/date -s \"01/01/2000 00:00:00\"");
-    exec ("/usr/sbin/service ntp start");
-    
+    fclose ( $fp );
+
+    exec ( "/usr/sbin/service ntp stop" );
+    exec ( "/bin/date -s \"01/01/2000 00:00:00\"" );
+    exec ( "/usr/sbin/service ntp start" );
+
     $to = 60;
-    while ($to && strftime ("%Y") == "2000")
+    while ( $to && strftime ( "%Y" ) == "2000" )
     {
-      sleep (1);
+      sleep ( 1 );
       $to--;
     }
-    
-    if (strftime ("%Y") != "2000")
+
+    if ( strftime ( "%Y" ) != "2000" )
     {
       $ok = 1;
     }
   }
-  unlink ($online_script);
+  unlink ( $online_script );
 }
 
-if (!$ok && file_exists($offline_script))
+if ( !$ok && file_exists ( $offline_script ) )
 {
-  exec ("/bin/bash $offline_script");
-  unlink ($offline_script);
+  exec ( "/bin/bash $offline_script" );
+  unlink ( $offline_script );
 }
 
-if ($ok)
+if ( $ok )
 {
-  touch ($online_flag);
+  touch ( $online_flag );
 }
-  
+
 echo $ok;
-  
 ?>

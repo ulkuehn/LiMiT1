@@ -4,6 +4,21 @@
 
 ---
 
+## [1.1.1] - Online Updates - 19 Sept 2017
+
+### Added
+
+- Functionality for online updates
+- Enhanced options for `limitify.sh`
+
+### Changed
+
+Several bugfixes.
+
+### Removed
+
+Nothing.
+
 ## [1.0.4] - Support for HUAWEI UMTS modems - 27 Aug 2017
 
 ### Added
@@ -20,7 +35,7 @@ Nothing.
 
 ---
  
-## 1.0.1 - initial release - 27 Aug 2017
+## 1.0.1 - Initial release - 27 Aug 2017
 
 ### Added
 
@@ -37,5 +52,6 @@ Nothing.
 Nothing.
 
 
-[Current]: https://github.com/ulkuehn/LiMiT1/compare/v1.0.4...HEAD
+[Current]: https://github.com/ulkuehn/LiMiT1/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/ulkuehn/LiMiT1/compare/v1.0.4...v1.1.1
 [1.0.4]: https://github.com/ulkuehn/LiMiT1/compare/v1.0.1...v1.0.4

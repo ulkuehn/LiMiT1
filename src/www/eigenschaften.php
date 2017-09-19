@@ -151,7 +151,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("Geräteeigenschaften", <<<LIMIT1
+titleAndHelp ("Geräteeigenschaften", <<<LIMIT1
 <p>Mit dieser Auswertung können gezielt Werte gesucht werden, die als Eigenschaften der verwalteten Geräte definiert wurden.</p>
 <p>Es werden sämtliche Geräteeigenschaften aufgelistet und jeweils angegeben, ob das Gerät bzw. die Eigenschaft in einer der vorhandenen Aufzeichnungen verwendet wird.</p>
 LIMIT1

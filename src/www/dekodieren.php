@@ -25,14 +25,14 @@ require_once ("include/database.php");
 
 include ("include/http.php");
 $extratitel = " - Dekodieren";
-$framename = $__usetabs ? "dekodieren" : "";
+$framename = $__usetabs ? "decode" : "";
 include ("include/htmlstart.php");
 $extranav = $__usetabs ? "<div class=\"navHider\"></div>" : "";
 include ("include/topmenu.php");
 
-$codeValue = array_key_exists("code", $_POST)? htmlspecialchars($_POST["code"]) : "";
+$codeValue = array_key_exists ( "decode", $_POST ) ? htmlspecialchars ( $_POST[ "decode" ] ) : "";
 
-titelHilfe ("Dekodieren", <<<LIMIT1
+titleAndHelp ( "Dekodieren", <<<LIMIT1
 Mit dieser Hilfsfunktion können kodierte Zeichenketten erkannt und ihr Inhalt sichtbar gemacht werden.
 <br>
 Dabei werden gängige Kodierungen wie Base64 und URL-Encode berücksichtigt. Um Mehrfachkodierungen aufzulösen,
@@ -49,7 +49,7 @@ echo <<<LIMIT1
         <h4 class="panel-title">Kodierte Zeichen</h4>
       </div>
       <div class="panel-body">
-        <textarea class="form-control" id="icode" name="code" rows=3 style="resize:vertical">$codeValue</textarea>
+        <textarea class="form-control" id="icode" name="decode" rows=3 style="resize:vertical">$codeValue</textarea>
         <div class="pull-left">
           <input type="submit" class="btn btn-primary" value="Dekodieren">
         </div>
@@ -64,205 +64,203 @@ LIMIT1;
 
 
 
-$pieces["Wert"] = array(array_key_exists("code", $_POST)? $_POST["code"] : "");
-$convert["Wert"] = array(false);
-$done["Wert"] = false;
-$seq = array ("Wert");
+$pieces[ "Wert" ] = array ( array_key_exists ( "decode", $_POST ) ? $_POST[ "decode" ] : "" );
+$convert[ "Wert" ] = array ( false );
+$done[ "Wert" ] = false;
+$seq = array ( "Wert" );
 
 do
 {
-  $vorher = count($pieces);
-  foreach ($seq as $kodierung)
-  {    
-    if ($done[$kodierung])
+  $vorher = count ( $pieces );
+  foreach ( $seq as $kodierung )
+  {
+    if ( $done[ $kodierung ] )
     {
       continue;
     }
-    $done[$kodierung] = true;
-    
+    $done[ $kodierung ] = true;
+
     // URL
     $kod = "URL ($kodierung)";
-    $wert = implode ("",$pieces[$kodierung]);
+    $wert = implode ( "", $pieces[ $kodierung ] );
     $epieces = array ();
     $econvert = array ();
     $okay = false;
-    while ($wert != "" && preg_match ("/((?:%[0-9a-f][0-9a-f])+)/i", $wert, $matches, PREG_OFFSET_CAPTURE))
+    while ( $wert != "" && preg_match ( "/((?:%[0-9a-f][0-9a-f])+)/i", $wert, $matches, PREG_OFFSET_CAPTURE ) )
     {
       $okay = true;
-      array_push ($epieces, substr ($wert, 0, $matches[1][1]));
-      array_push ($econvert, 0);
-      array_push ($epieces, urldecode($matches[1][0]));
-      array_push ($econvert, 1);      
-      $wert = substr ($wert, $matches[1][1]+strlen($matches[1][0]));
+      array_push ( $epieces, substr ( $wert, 0, $matches[ 1 ][ 1 ] ) );
+      array_push ( $econvert, 0 );
+      array_push ( $epieces, urldecode ( $matches[ 1 ][ 0 ] ) );
+      array_push ( $econvert, 1 );
+      $wert = substr ( $wert, $matches[ 1 ][ 1 ] + strlen ( $matches[ 1 ][ 0 ] ) );
     }
-    array_push ($epieces, $wert);
-    array_push ($econvert, 0);
-    if ($okay && implode ("",$pieces[$kodierung]) !=  implode ("",$epieces))
+    array_push ( $epieces, $wert );
+    array_push ( $econvert, 0 );
+    if ( $okay && implode ( "", $pieces[ $kodierung ] ) != implode ( "", $epieces ) )
     {
-      $pieces[$kod] = $epieces;
-      $convert[$kod] = $econvert;
-      $done[$kod] = false;
-      array_push ($seq, $kod);
+      $pieces[ $kod ] = $epieces;
+      $convert[ $kod ] = $econvert;
+      $done[ $kod ] = false;
+      array_push ( $seq, $kod );
     }
 
 
     // Base16
     $kod = "Base16 ($kodierung)";
-    $wert = implode ("",$pieces[$kodierung]);
+    $wert = implode ( "", $pieces[ $kodierung ] );
     $epieces = array ();
     $econvert = array ();
     $okay = false;
-    while ($wert != "" && preg_match ("/(?:0x)?([0-9a-f]{2}+)/i", $wert, $matches, PREG_OFFSET_CAPTURE))
+    while ( $wert != "" && preg_match ( "/(?:0x)?([0-9a-f]{2}+)/i", $wert, $matches, PREG_OFFSET_CAPTURE ) )
     {
       $okay = true;
-      array_push ($epieces, substr ($wert, 0, $matches[1][1]));
-      array_push ($econvert, 0);
+      array_push ( $epieces, substr ( $wert, 0, $matches[ 1 ][ 1 ] ) );
+      array_push ( $econvert, 0 );
       $bin = "";
-      for ($i=0; $i<strlen($matches[1][0]); $i+=2)
+      for ( $i = 0; $i < strlen ( $matches[ 1 ][ 0 ] ); $i += 2 )
       {
-        $bin .= chr (base_convert(substr($matches[1][0], $i, 2), 16, 10));
+        $bin .= chr ( base_convert ( substr ( $matches[ 1 ][ 0 ], $i, 2 ), 16, 10 ) );
       }
-      array_push ($epieces, $bin);
-      array_push ($econvert, 1);      
-      $wert = substr ($wert, $matches[1][1]+strlen($matches[1][0]));
+      array_push ( $epieces, $bin );
+      array_push ( $econvert, 1 );
+      $wert = substr ( $wert, $matches[ 1 ][ 1 ] + strlen ( $matches[ 1 ][ 0 ] ) );
     }
-    array_push ($epieces, $wert);
-    array_push ($econvert, 0);
-    if ($okay && implode ("",$pieces[$kodierung]) !=  implode ("",$epieces))
+    array_push ( $epieces, $wert );
+    array_push ( $econvert, 0 );
+    if ( $okay && implode ( "", $pieces[ $kodierung ] ) != implode ( "", $epieces ) )
     {
-      $pieces[$kod] = $epieces;
-      $convert[$kod] = $econvert;
-      $done[$kod] = false;
-      array_push ($seq, $kod);
+      $pieces[ $kod ] = $epieces;
+      $convert[ $kod ] = $econvert;
+      $done[ $kod ] = false;
+      array_push ( $seq, $kod );
     }
 
 
     // Base64
     $kod = "Base64 ($kodierung)";
-    $wert = implode ("",$pieces[$kodierung]);
+    $wert = implode ( "", $pieces[ $kodierung ] );
     $epieces = array ();
     $econvert = array ();
     $okay = false;
-    while ($wert != "" && preg_match ("/([a-zA-Z0-9\+\/=]{4}+)/i", $wert, $matches, PREG_OFFSET_CAPTURE))
+    while ( $wert != "" && preg_match ( "/([a-zA-Z0-9\+\/=]{4}+)/i", $wert, $matches, PREG_OFFSET_CAPTURE ) )
     {
-      array_push ($epieces, substr ($wert, 0, $matches[1][1]));
-      array_push ($econvert, 0);
-      if ( ($bin = base64_decode($matches[1][0], true )) != false)
+      array_push ( $epieces, substr ( $wert, 0, $matches[ 1 ][ 1 ] ) );
+      array_push ( $econvert, 0 );
+      if ( ($bin = base64_decode ( $matches[ 1 ][ 0 ], true )) != false )
       {
         $okay = true;
-        array_push ($epieces, $bin);
-        array_push ($econvert, 1);      
+        array_push ( $epieces, $bin );
+        array_push ( $econvert, 1 );
       }
       else
       {
-        array_push ($epieces, $matches[1][0]);
-        array_push ($econvert, 0);      
+        array_push ( $epieces, $matches[ 1 ][ 0 ] );
+        array_push ( $econvert, 0 );
       }
-      $wert = substr ($wert, $matches[1][1]+strlen($matches[1][0]));
+      $wert = substr ( $wert, $matches[ 1 ][ 1 ] + strlen ( $matches[ 1 ][ 0 ] ) );
     }
-    array_push ($epieces, $wert);
-    array_push ($econvert, 0);
-    if ($okay && implode ("",$pieces[$kodierung]) !=  implode ("",$epieces))
+    array_push ( $epieces, $wert );
+    array_push ( $econvert, 0 );
+    if ( $okay && implode ( "", $pieces[ $kodierung ] ) != implode ( "", $epieces ) )
     {
-      $pieces[$kod] = $epieces;
-      $convert[$kod] = $econvert;
-      $done[$kod] = false;
-      array_push ($seq, $kod);      
+      $pieces[ $kod ] = $epieces;
+      $convert[ $kod ] = $econvert;
+      $done[ $kod ] = false;
+      array_push ( $seq, $kod );
     }
 
 
     // Unixtime
     $kod = "strftime ($kodierung)";
-    $wert = implode ("",$pieces[$kodierung]);
+    $wert = implode ( "", $pieces[ $kodierung ] );
     $epieces = array ();
     $econvert = array ();
     $okay = false;
-    while ($wert != "" && preg_match ("/([0-9]+)/", $wert, $matches, PREG_OFFSET_CAPTURE))
+    while ( $wert != "" && preg_match ( "/([0-9]+)/", $wert, $matches, PREG_OFFSET_CAPTURE ) )
     {
-      array_push ($epieces, substr ($wert, 0, $matches[1][1]));
-      array_push ($econvert, 0);
-      $min_ts = strtotime ("2000-01-01 00:00:00");
+      array_push ( $epieces, substr ( $wert, 0, $matches[ 1 ][ 1 ] ) );
+      array_push ( $econvert, 0 );
+      $min_ts = strtotime ( "2000-01-01 00:00:00" );
       $max_ts = 2147483648;
       $erg = "";
-      if ($min_ts <= $matches[1][0] && $matches[1][0] <= $max_ts)
+      if ( $min_ts <= $matches[ 1 ][ 0 ] && $matches[ 1 ][ 0 ] <= $max_ts )
       {
-        $erg = strftime ("%d.%m.%Y %T", $matches[1][0]);
+        $erg = strftime ( "%d.%m.%Y %T", $matches[ 1 ][ 0 ] );
       }
-      else if ($min_ts <= $matches[1][0]/1000 && $matches[1][0]/1000 <= $max_ts)
+      else if ( $min_ts <= $matches[ 1 ][ 0 ] / 1000 && $matches[ 1 ][ 0 ] / 1000 <= $max_ts )
       {
-        $erg = strftime ("%d.%m.%Y %T", $matches[1][0]/1000) . "," . $matches[1][0]%1000;
+        $erg = strftime ( "%d.%m.%Y %T", $matches[ 1 ][ 0 ] / 1000 ) . "," . $matches[ 1 ][ 0 ] % 1000;
       }
-      else if ($min_ts <= $matches[1][0]/1000000 && $matches[1][0]/1000000 <= $max_ts)
+      else if ( $min_ts <= $matches[ 1 ][ 0 ] / 1000000 && $matches[ 1 ][ 0 ] / 1000000 <= $max_ts )
       {
-        $erg = strftime ("%d.%m.%Y %T", $matches[1][0]/1000000);
+        $erg = strftime ( "%d.%m.%Y %T", $matches[ 1 ][ 0 ] / 1000000 );
       }
-      if ($erg != "")
+      if ( $erg != "" )
       {
-        array_push ($epieces, $erg);
-        array_push ($econvert, 1);
+        array_push ( $epieces, $erg );
+        array_push ( $econvert, 1 );
         $okay = true;
       }
       else
       {
-        array_push ($epieces, $matches[1][0]);
-        array_push ($econvert, 0);      
+        array_push ( $epieces, $matches[ 1 ][ 0 ] );
+        array_push ( $econvert, 0 );
       }
-      $wert = substr ($wert, $matches[1][1]+strlen($matches[1][0]));
+      $wert = substr ( $wert, $matches[ 1 ][ 1 ] + strlen ( $matches[ 1 ][ 0 ] ) );
     }
-    array_push ($epieces, $wert);
-    array_push ($econvert, 0);
-    if ($okay && implode ("",$pieces[$kodierung]) !=  implode ("",$epieces))
+    array_push ( $epieces, $wert );
+    array_push ( $econvert, 0 );
+    if ( $okay && implode ( "", $pieces[ $kodierung ] ) != implode ( "", $epieces ) )
     {
-      $pieces[$kod] = $epieces;
-      $convert[$kod] = $econvert;
-      $done[$kod] = true;
-      array_push ($seq, $kod);
+      $pieces[ $kod ] = $epieces;
+      $convert[ $kod ] = $econvert;
+      $done[ $kod ] = true;
+      array_push ( $seq, $kod );
     }
-    
-    
+
+
     // MIME header
     $kod = "MIME ($kodierung)";
-    $wert = implode ("",$pieces[$kodierung]);
+    $wert = implode ( "", $pieces[ $kodierung ] );
     $epieces = array ();
     $econvert = array ();
     $okay = false;
-    while ($wert != "" && preg_match ("/(=\?.*\?=)/", $wert, $matches, PREG_OFFSET_CAPTURE))
+    while ( $wert != "" && preg_match ( "/(=\?.*\?=)/", $wert, $matches, PREG_OFFSET_CAPTURE ) )
     {
-      array_push ($epieces, substr ($wert, 0, $matches[1][1]));
-      array_push ($econvert, 0);
-      if ( ($mime = iconv_mime_decode ($matches[1][0], 1, "UTF-8" )) != false)
+      array_push ( $epieces, substr ( $wert, 0, $matches[ 1 ][ 1 ] ) );
+      array_push ( $econvert, 0 );
+      if ( ($mime = iconv_mime_decode ( $matches[ 1 ][ 0 ], 1, "UTF-8" )) != false )
       {
-        array_push ($epieces, $mime);
-        array_push ($econvert, 1);
+        array_push ( $epieces, $mime );
+        array_push ( $econvert, 1 );
         $okay = true;
       }
       else
       {
-        array_push ($epieces, $matches[1][0]);
-        array_push ($econvert, 0);      
+        array_push ( $epieces, $matches[ 1 ][ 0 ] );
+        array_push ( $econvert, 0 );
       }
-      $wert = substr ($wert, $matches[1][1]+strlen($matches[1][0]));
+      $wert = substr ( $wert, $matches[ 1 ][ 1 ] + strlen ( $matches[ 1 ][ 0 ] ) );
     }
-    array_push ($epieces, $wert);
-    array_push ($econvert, 0);
-    if ($okay && implode ("",$pieces[$kodierung]) != implode ("",$epieces))
+    array_push ( $epieces, $wert );
+    array_push ( $econvert, 0 );
+    if ( $okay && implode ( "", $pieces[ $kodierung ] ) != implode ( "", $epieces ) )
     {
-      $pieces[$kod] = $epieces;
-      $convert[$kod] = $econvert;
-      $done[$kod] = true;
-      array_push ($seq, $kod);
+      $pieces[ $kod ] = $epieces;
+      $convert[ $kod ] = $econvert;
+      $done[ $kod ] = true;
+      array_push ( $seq, $kod );
     }
-  
   }
 }
-while (count($pieces) != $vorher);
+while ( count ( $pieces ) != $vorher );
 #unset ($pieces["Wert"]);
-
 #echo "<p><pre>",print_r($pieces),"</pre></p>";
 #echo "<p><pre>",print_r($convert),"</pre></p>";
 
 
-if (count($pieces))
+if ( count ( $pieces ) )
 {
   echo <<<LIMIT1
 <div class="row">
@@ -282,26 +280,26 @@ if (count($pieces))
             <tbody>
 LIMIT1;
 
-  foreach ($seq as $kodierung)
+  foreach ( $seq as $kodierung )
   {
     $tr = "<tr><td>$kodierung</td><td class=\"break\"><pre>";
     $pl = 0;
-    while ($pieces[$kodierung])
+    while ( $pieces[ $kodierung ] )
     {
-      $piece = array_shift($pieces[$kodierung]);
-      $convt = array_shift($convert[$kodierung]);
-      $pl += strlen ($piece);
-      $tr .= $convt? "<span class=\"highlight\">":"";
-      $tr .= mb_convert_encoding($piece, "UTF-8", mb_detect_encoding($piece, "UTF-8, ISO-8859-1, ISO-8859-15", true));
-      $tr .= $convt? "</span>":"";
+      $piece = array_shift ( $pieces[ $kodierung ] );
+      $convt = array_shift ( $convert[ $kodierung ] );
+      $pl += strlen ( $piece );
+      $tr .= $convt ? "<span class=\"highlight\">" : "";
+      $tr .= mb_convert_encoding ( $piece, "UTF-8", mb_detect_encoding ( $piece, "UTF-8, ISO-8859-1, ISO-8859-15", true ) );
+      $tr .= $convt ? "</span>" : "";
     }
     $tr .= "</pre></td></tr>";
-    if ($pl)
+    if ( $pl )
     {
       echo $tr;
     }
   }
-  
+
   echo <<<LIMIT1
             </tbody>
           </table>
@@ -312,7 +310,6 @@ LIMIT1;
 </div>
 LIMIT1;
 }
-   
-include ("include/htmlend.php");
 
+include ("include/htmlend.php");
 ?>

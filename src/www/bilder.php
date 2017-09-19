@@ -184,7 +184,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("Bilder", <<<LIMIT1
+titleAndHelp ("Bilder", <<<LIMIT1
 Mit dieser Auswertung können die aufgezeichneten Bilder betrachtet werden.
 Dabei werden alle Inhalte berücksichtigt, die den MIME-Typ "image/..." haben,
 also etwa "image/jpeg" oder "image/gif".<br>

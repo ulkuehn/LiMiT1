@@ -164,7 +164,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("SSL-Verschlüsselung", <<<LIMIT1
+titleAndHelp ("SSL-Verschlüsselung", <<<LIMIT1
 Soweit SSL- oder HTTPS-Verbindungen aufgezeichnet wurden, 
 können hier die verwendeten Verschlüsselungstypen (SSL-Suite) analysiert werden.
 Im Drill-Down können die einzelnen Verbindungen identifiziert werden, die die entsprechende Suite verwenden.

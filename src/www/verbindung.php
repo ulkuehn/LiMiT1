@@ -25,7 +25,7 @@ include ("include/http.php");
 include ("include/htmlstart.php");
 include ("include/topmenu.php");
 
-titelHilfe ("Inhalte einer Verbindung", <<<LIMIT1
+titleAndHelp ("Inhalte einer Verbindung", <<<LIMIT1
 <p>In dieser Ansicht ist es möglich, schnell durch die vorhandenen Aufzeichnungen und durch deren Verbindungen zu blättern und dabei die Eigenschaften und die Inhalte der Verbindung zu betrachten.</p>
 LIMIT1
 );

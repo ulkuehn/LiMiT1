@@ -58,7 +58,7 @@ LIMIT1;
 }
 
 
-titelHilfe ("Internetverbindung per LAN", <<<LIMIT1
+titleAndHelp ("Internetverbindung per LAN", <<<LIMIT1
 Ist ein LAN-Kabel angeschlossen, kann die Internetverbindung über das LAN hergestellt werden.
 <br>
 Es ist möglich, eine DHCP-basierte automatische Konfiguration vorzunehmen, wenn das Netzwerk dies unterstützt.
@@ -105,7 +105,6 @@ LIMIT1
 # LAN (DHCP)
 # $wired_interface
 /sbin/ifconfig $wired_interface 0.0.0.0
-/sbin/ifconfig $wired_interface down
 
 LIMIT1
                  , $wired_interface );

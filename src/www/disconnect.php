@@ -24,7 +24,7 @@ require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
 
-titelHilfe ("Offline", <<<LIMIT1
+titleAndHelp ("Offline", <<<LIMIT1
 Die bestehende Internetverbindung trennen. Eine Aufzeichnung ist nur bei bestehender Internetverbindung möglich.
 LIMIT1
 );

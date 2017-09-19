@@ -29,7 +29,7 @@ require ("include/htmlstart.php");
 require ("include/topmenu.php");
 require ("include/database.php");
 
-titelHilfe ("Geräte verwalten", <<<LIMIT1
+titleAndHelp ("Geräte verwalten", <<<LIMIT1
 In diesem Bereich können die Geräte verwaltet werden, deren Verkehr aufgezeichnet werden soll bzw. wurde.
 Für jedes Gerät können beliebige Eigenschaften definiert werden, um diese in den aufgezeichneten Daten auffinden zu können.
 <br>

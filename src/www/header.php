@@ -28,7 +28,7 @@ include ("include/topmenu.php");
 
 $_ansehen = "Request ansehen";
 
-titelHilfe ("Headerdetails", <<<LIMIT1
+titleAndHelp ("Headerdetails", <<<LIMIT1
 LIMIT1
 );
 

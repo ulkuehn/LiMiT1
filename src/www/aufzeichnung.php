@@ -16,12 +16,10 @@
 //
 //==============================================================================
 //==============================================================================
-
-
 // Filter auf angezeigte Aufzeichnung
-if (isset($_REQUEST["aufzeichnung"]))
+if ( isset ( $_REQUEST[ "aufzeichnung" ] ) )
 {
-  setcookie ("filter",$_REQUEST["aufzeichnung"]);
+  setcookie ( "filter", $_REQUEST[ "aufzeichnung" ] );
 }
 
 require_once ("include/constants.php");
@@ -34,7 +32,7 @@ include ("include/htmlstart.php");
 include ("include/topmenu.php");
 
 
-titelHilfe ("Verbindungen einer Aufzeichnung", <<<LIMIT1
+titleAndHelp ( "Verbindungen einer Aufzeichnung", <<<LIMIT1
 <p>In dieser Ansicht ist es möglich, schnell durch die vorhandenen Aufzeichnungen zu blättern und die Verbindungen zu sehen, die während der ausgewählten Aufzeichnung hergestellt wurden.</p>
 <p>Dabei ist z.B. erkennbar, zu welchem Server und zu welchem Dienst oder Port die Verbindung bestand. Bei http(s)-Verbindungen wird auch der User-Agent angegeben, der beim Verbindungsaufbau übertragen wurde. Über diese Angabe lassen sich häufig zusammengehörige Verbindungen zuordnen, da sie vom selben Programm (Browser, Client, App) stammen.</p>
 <p>Es werden folgende Verbindungstypen unterschieden:</p>
@@ -62,17 +60,17 @@ echo <<<LIMIT1
       <div class="panel-body">
 LIMIT1;
 
-$select_s = $db->prepare ("select *,date_format(zeit,'%e.%c.%Y') as _zeitd, date_format(zeit,'%H:%i:%s') as _zeitt, inet_ntoa(ip) as _ip from verbindung where aufzeichnung=? order by nr");
-$select_s->execute (array($_GET["aufzeichnung"]));
+$select_s = $db->prepare ( "select *,date_format(zeit,'%e.%c.%Y') as _zeitd, date_format(zeit,'%H:%i:%s') as _zeitt, inet_ntoa(ip) as _ip from verbindung where aufzeichnung=? order by nr" );
+$select_s->execute ( array ( $_GET[ "aufzeichnung" ] ) );
 
-if (($verbindung = $select_s->fetch()) == false)
+if ( ($verbindung = $select_s->fetch ()) == false )
 {
-  infoMsg ("Es sind keine Verbindungen vorhanden.");
+  infoMsg ( "Es sind keine Verbindungen vorhanden." );
 }
 else
 {
-  echo tableSorter ("Verbindungen", "columns: [ {orderable:false, searchable:false}, {type:'num'}, {}, {}, {}, {}, {type:'num'}, {} ], order: [ [2,'asc'] ]");
-  $foldMe = tableFolder ("Verbindungen");
+  echo tableSorter ( "Verbindungen", "columns: [ {orderable:false, searchable:false}, {type:'num'}, {}, {}, {}, {}, {type:'num'}, {} ], order: [ [2,'asc'] ]" );
+  $foldMe = tableFolder ( "Verbindungen" );
 
   echo <<<LIMIT1
         <table id="Verbindungen" class="table table-hover">
@@ -95,44 +93,43 @@ LIMIT1;
   do
   {
     echo "<tr>";
-    echo "<td>",viewButton ("verbindung.php?verbindung=".$verbindung["id"],$_ansehen),"</td>";
-    echo "<td",onevent("Verbindungen"),"><span class=\"fullVerbindungen\">",$verbindung["_zeitd"]," <i class=\"fa fa-clock-o\"></i> ","</span><span class=\"compactVerbindungen\">$tableEllipsis</span>",$verbindung["_zeitt"],"<!--",$verbindung["nr"],"--></td>"; // sort by nr
+    echo "<td>", viewButton ( "verbindung.php?verbindung=" . $verbindung[ "id" ], $_ansehen ), "</td>";
+    echo "<td", onevent ( "Verbindungen" ), "><span class=\"fullVerbindungen\">", $verbindung[ "_zeitd" ], " <i class=\"fa fa-clock-o\"></i> ", "</span><span class=\"compactVerbindungen\">$tableEllipsis</span>", $verbindung[ "_zeitt" ], "<!--", $verbindung[ "nr" ], "--></td>"; // sort by nr
 
-    echo "<td>",$verbindung["typ"],"</td>";
-    
+    echo "<td>", $verbindung[ "typ" ], "</td>";
+
     $ua = "";
-    if (substr($verbindung["typ"],0,4) == "http")
+    if ( substr ( $verbindung[ "typ" ], 0, 4 ) == "http" )
     {
-      $ua_s = $db->prepare ("select useragent from {$verbindung["typ"]} where verbindung=?");
-      $ua_s->execute (array($verbindung["id"]));
-      $ua = $ua_s->fetchColumn();
+      $ua_s = $db->prepare ( "select useragent from {$verbindung[ "typ" ]} where verbindung=?" );
+      $ua_s->execute ( array ( $verbindung[ "id" ] ) );
+      $ua = $ua_s->fetchColumn ();
     }
-    echo faltZelle ($ua, "Verbindungen");
+    echo faltZelle ( $ua, "Verbindungen" );
 
-    $srvc = getservbyport ($verbindung["vonport"],$verbindung["typ"]=="udp"? "udp":"tcp");
-    echo "<td class=\"numeric\">",$verbindung["vonport"],$srvc!=""? " ($srvc)":"","<!--",$verbindung["vonport"],"--></td>";
-      
-    if (!$verbindung["host"])
+    $srvc = getservbyport ( $verbindung[ "vonport" ], $verbindung[ "typ" ] == "udp" ? "udp" : "tcp" );
+    echo "<td class=\"numeric\">", $verbindung[ "vonport" ], $srvc != "" ? " ($srvc)" : "", "<!--", $verbindung[ "vonport" ], "--></td>";
+
+    if ( !$verbindung[ "host" ] )
     {
-      echo ipHostinfo ($verbindung["ip"], "Verbindungen");
+      echo ipHostinfo ( $verbindung[ "ip" ], "Verbindungen" );
     }
     else
     {
-      echo idHostinfo ($verbindung["host"], "Verbindungen");
+      echo idHostinfo ( $verbindung[ "host" ], "Verbindungen" );
     }
-    
-    $srvc = getservbyport ($verbindung["anport"],$verbindung["typ"]=="udp"? "udp":"tcp");
-    echo "<td class=\"numeric\">",$verbindung["anport"],$srvc!=""? " ($srvc)":"","<!--",$verbindung["anport"],"--></td>";
-    echo "<td class=\"numeric\">",$verbindung["laenge"],"</td>";
+
+    $srvc = getservbyport ( $verbindung[ "anport" ], $verbindung[ "typ" ] == "udp" ? "udp" : "tcp" );
+    echo "<td class=\"numeric\">", $verbindung[ "anport" ], $srvc != "" ? " ($srvc)" : "", "<!--", $verbindung[ "anport" ], "--></td>";
+    echo "<td class=\"numeric\">", $verbindung[ "laenge" ], "</td>";
     echo "</tr>";
   }
-  while ($verbindung = $select_s->fetch());
-  
+  while ( $verbindung = $select_s->fetch () );
+
   echo "</tbody></table>";
 }
 
 echo "</div></div></div></form>";
 
 include ("include/htmlend.php");
-
 ?>

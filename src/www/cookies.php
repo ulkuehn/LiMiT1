@@ -110,7 +110,7 @@ LIMIT1;
 }
 
 
-titelHilfe ("Cookies", <<<LIMIT1
+titleAndHelp ("Cookies", <<<LIMIT1
 Mit dieser Auswertung lassen sich die Cookies erkennen, die in den aufgezeichneten Verbindungen enthalten sind.
 <br>
 Dabei werden sowohl empfangene Cookies (d.h. solche, die von Internet-Servern stammen) berücksichtigt als auch

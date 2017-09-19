@@ -82,7 +82,7 @@ function eigerg ($wert, $geraet, $name)
 
 if (!file_exists ($session_file))
 {
-  titelHilfe ("Datenverkehr aufzeichnen", <<<LIMIT1
+  titleAndHelp ("Datenverkehr aufzeichnen", <<<LIMIT1
 <p>Mit dieser Funktion kann die Aufzeichnung des Datenverkehrs für das bzw. eines der am WLAN "$__wlan_ssid" angeschlossenen Geräte gestartet werden.
 Während die Datenaufzeichnung läuft, wird der Datenverkehr zwischen dem entsprechenden Gerät und dem Internet mitgeschnitten und wird anschließend für die spätere Auswertung in einer Datenbank abgespeichert.</p>
 <p>Sind mehrere Geräte mit dem WLAN "$__wlan_ssid" verbunden, kann das Gerät, dessen Daten aufgezciehnet werden sollen aus der Liste "Aufzuzeichnendes Gerät" ausgewählt werden. Die Auswahlliste "Verwaltetes Gerät" bezieht sich auf die in der Geräteverwaltung eingerichteten Geräte.</p>
@@ -512,7 +512,7 @@ else
     // Aufzeichnungsende-Formular anzeigen
     else
     {
-      titelHilfe ("Aufzeichnung stoppen", <<<LIMIT1
+      titleAndHelp ("Aufzeichnung stoppen", <<<LIMIT1
 Hiermit wird die laufende Aufzeichnung gestoppt und die restlichen Daten werden in die Datenbank übernommen.
 LIMIT1
       );
@@ -548,7 +548,7 @@ LIMIT1;
   
   if (!$running)
   {
-    titelHilfe ("Aufzeichnung in Datenbank übernehmen", <<<LIMIT1
+    titleAndHelp ("Aufzeichnung in Datenbank übernehmen", <<<LIMIT1
 LIMIT1
     );
 

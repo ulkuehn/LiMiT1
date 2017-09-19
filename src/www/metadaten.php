@@ -232,7 +232,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("Metadaten", <<<LIMIT1
+titleAndHelp ("Metadaten", <<<LIMIT1
 Manche übertragenen Inhalte enthalten Meta-Daten, die bei einer Ansicht des Inhalts nicht oder nur schwer erkennbar sind.
 In HTML-Dateien sind dies z.B. Kommentare, in Bildern Informationen über die verwendete Kamera oder deren Standort.
 <br>

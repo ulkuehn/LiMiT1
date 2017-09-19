@@ -226,7 +226,7 @@ LIMIT1;
 }
 
 
-titelHilfe ("Verweise", <<<LIMIT1
+titleAndHelp ("Verweise", <<<LIMIT1
 Diese Auswertung betrachtet Verbindungen zwischen Servern, die durch explizite Verweise hergestellt werden.
 Solche Verweise können durch Referer-Angaben, Origin- oder Location-Header hergestellt werden.
 <br>

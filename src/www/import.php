@@ -31,7 +31,7 @@ require ("include/topmenu.php");
 $_upload = "Aufzeichnung importieren";
 $_vorzeitig = "Import vorzeitig beenden";
 
-titelHilfe ("Aufzeichnung importieren", <<<LIMIT1
+titleAndHelp ("Aufzeichnung importieren", <<<LIMIT1
 Eine zuvor auf diesem oder einem anderen $my_name-Gerät exportierte Aufzeichnung kann hier in die Datenbank importiert werden.
 LIMIT1
 );

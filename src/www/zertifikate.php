@@ -173,7 +173,7 @@ if (!isset($_REQUEST["show"]))
   $_REQUEST["show"] = "jede";
 }
 
-titelHilfe ("Zertifikate", <<<LIMIT1
+titleAndHelp ("Zertifikate", <<<LIMIT1
 Diese Auswertung betrachtet die SSL-Zertifikate, die aufgezeichnet wurden.
 LIMIT1
 );
