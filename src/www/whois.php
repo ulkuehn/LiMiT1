@@ -34,10 +34,12 @@ function whois ( $domain, $check )
     $checking = true;
     if ( is_readable ( $offline_script ) )
     {
+      // whois Version 5.2.7 return value gives no indication if query was succesful (?)
       exec ( "/usr/bin/whois -H $check", $who, $ret );
       $who = implode ( "\n", $who );
       $insert_s = $db->prepare ( "insert into whois set domain=?, whois=?, stand=now(), okay=?" );
-      $insert_s->execute ( array ( $check, $who, $ret == 0 ) );
+      // see above, so $ret bears no information
+      $insert_s->execute ( array ( $check, $who, TRUE ) ); //$ret == 0 ) );
       $aktuelle = $db->lastInsertId ();
 
       $select_s = $db->prepare ( "select *, datediff(now(),stand) as _diffd, timediff(now(),stand) as _difft, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by stand desc" );

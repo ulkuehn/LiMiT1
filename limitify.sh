@@ -31,7 +31,7 @@ my_name="LiMiT1"
 # major version; full version number is "major.minor"
 my_major="1.1"
 # minor version counter, may get updated automagically by git commit
-my_minor="1"
+my_minor="2"
 
 # root password
 password="limit1"
@@ -1167,8 +1167,8 @@ then
   
   if [ -e $basedir/cert.key ] && [ -e $basedir/cert.crt ]
   then
-    cp $basedir/cert.key $installdir/cert.key
-    cp $basedir/cert.crt $installdir/cert.crt
+    /bin/cp -a $basedir/cert.key $installdir/cert.key
+    /bin/cp -a $basedir/cert.crt $installdir/cert.crt
     echo "found cert.key, cert.crt" | logo
   else
     echo "no certificate found" | logo

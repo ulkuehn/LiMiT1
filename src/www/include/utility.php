@@ -1168,7 +1168,7 @@ function whoisify ( $name, $check = true )
     if ( $parts[ 0 ] != "" )
     {
       $ret .= "<div class=\"whohover\" onmouseover=\"whoover(this," . ($check ? (in_array ( implode ( ".", $parts ), $domains ) ? 2 : 1) : 0) . ")\" onmouseout=\"whoout(this," . ($check ? (in_array ( implode ( ".", $parts ), $domains ) ? 2 : 1) : 0) . ")\">";
-      $ret .= "<a class=\"whohover\" href=\"whois.php?domain=" . implode ( ".", $parts ) . "\" target=\"{$my_name}whois\">" . $parts[ 0 ];
+      $ret .= "<a class=\"whohover\" href=\"whois.php?whois=" . implode ( ".", $parts ) . "\" target=\"{$my_name}whois\">" . $parts[ 0 ];
     }
     array_shift ( $parts );
     if ( count ( $parts ) )
