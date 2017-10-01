@@ -117,7 +117,7 @@ LIMIT1;
         if ( !array_key_exists ( $m[ 1 ] . $m[ 2 ], $lines ) )
         {
           $erg .= "<tr><td>" . $m[ 1 ] . "</td><td>" . $m[ 2 ] . "</td></tr>";
-          $lines[ $m[ 1 ] . $m[ 2 ] ] ++;
+          $lines[ $m[ 1 ] . $m[ 2 ] ] = TRUE;
         }
       }
     }

@@ -29,41 +29,41 @@ include ("include/topmenu.php");
 $_aansehen = "Aufzeichnung ansehen";
 $_ransehen = "Request ansehen";
 
-$select_s = $db->prepare ("select * from inhalt where id=?");
-$select_s->execute (array($_REQUEST["inhalt"]));
-$inhalt = $select_s->fetch();
+$select_s = $db->prepare ( "select * from inhalt where id=?" );
+$select_s->execute ( array ( $_REQUEST[ "inhalt" ] ) );
+$inhalt = $select_s->fetch ();
 
-if ($inhalt["typ"]=="request")
+if ( $inhalt[ "typ" ] == "request" )
 {
-  $select_s = $db->prepare ("select * from request where id=?");
-  $select_s->execute (array($inhalt["referenz"]));
-  $referenz = $select_s->fetch();
+  $select_s = $db->prepare ( "select * from request where id=?" );
+  $select_s->execute ( array ( $inhalt[ "referenz" ] ) );
+  $referenz = $select_s->fetch ();
 }
-else if ($inhalt["typ"]=="response")
+else if ( $inhalt[ "typ" ] == "response" )
 {
-  $select_s = $db->prepare ("select * from response where request=?");
-  $select_s->execute (array($inhalt["referenz"]));
-  $referenz = $select_s->fetch();
+  $select_s = $db->prepare ( "select * from response where request=?" );
+  $select_s->execute ( array ( $inhalt[ "referenz" ] ) );
+  $referenz = $select_s->fetch ();
 }
 
-$verbindung_s = $db->prepare ("select *,date_format(zeit,'%e.%c.%Y') as _zeitd, date_format(zeit,'%H:%i:%s') as _zeitt from verbindung where id=?");
-$verbindung_s->execute (array($inhalt["verbindung"]));
-$verbindung = $verbindung_s->fetch();
+$verbindung_s = $db->prepare ( "select *,date_format(zeit,'%e.%c.%Y') as _zeitd, date_format(zeit,'%H:%i:%s') as _zeitt from verbindung where id=?" );
+$verbindung_s->execute ( array ( $inhalt[ "verbindung" ] ) );
+$verbindung = $verbindung_s->fetch ();
 
-$aufzeichnung_s = $db->prepare ("select *,date_format(start,'%e.%c.%Y') as _startd, date_format(start,'%H:%i') as _startt from aufzeichnung where id=?");
-$aufzeichnung_s->execute (array($inhalt["aufzeichnung"]));
-$aufzeichnung = $aufzeichnung_s->fetch();
+$aufzeichnung_s = $db->prepare ( "select *,date_format(start,'%e.%c.%Y') as _startd, date_format(start,'%H:%i') as _startt from aufzeichnung where id=?" );
+$aufzeichnung_s->execute ( array ( $inhalt[ "aufzeichnung" ] ) );
+$aufzeichnung = $aufzeichnung_s->fetch ();
 
-$select_s = $db->prepare ("select eigenschaft.wert from geraet,eigenschaft where geraet.id=eigenschaft.geraet and geraet.id=?");
-$select_s->execute(array($aufzeichnung["geraet"]));
-$eigenschaften = $select_s->fetchAll(PDO::FETCH_COLUMN, 0);
+$select_s = $db->prepare ( "select eigenschaft.wert from geraet,eigenschaft where geraet.id=eigenschaft.geraet and geraet.id=?" );
+$select_s->execute ( array ( $aufzeichnung[ "geraet" ] ) );
+$eigenschaften = $select_s->fetchAll ( PDO::FETCH_COLUMN, 0 );
 
-titleAndHelp ("Inhaltdetails", <<<LIMIT1
+titleAndHelp ( "Inhaltdetails", <<<LIMIT1
 LIMIT1
 );
 
 
-$foldMe = tableFolder ("Inhalt");
+$foldMe = tableFolder ( "Inhalt" );
 
 echo <<<LIMIT1
   <div class="row">
@@ -76,11 +76,11 @@ echo <<<LIMIT1
           <table id="Inhalt" class="table table-hover">
             <tbody>
 LIMIT1;
-echo "<tr><td>",viewButton ("aufzeichnung.php?aufzeichnung=".$aufzeichnung["id"],$_aansehen)," Aufzeichnung</td>",($aufzeichnung["name"]==""? "<td>".$aufzeichnung["_startd"]." <i class=\"fa fa-clock-o\"></i> ".$aufzeichnung["_startt"]."</td>" : faltZelle($aufzeichnung["name"],$tableName)),"</tr>";
-echo "<tr><td>",viewButton ("request.php?request=".$inhalt["referenz"],$_ransehen)," Request</td><td>",$verbindung["_zeitd"]," <i class=\"fa fa-clock-o\"></i> ",$verbindung["_zeitt"],"</td></tr>";
-echo "<tr><td>Typ</td><td>",strtolower($referenz["mime"]),"</td></tr>";
+echo "<tr><td>", viewButton ( "aufzeichnung.php?aufzeichnung=" . $aufzeichnung[ "id" ], $_aansehen ), " Aufzeichnung</td>", ($aufzeichnung[ "name" ] == "" ? "<td>" . $aufzeichnung[ "_startd" ] . " <i class=\"fa fa-clock-o\"></i> " . $aufzeichnung[ "_startt" ] . "</td>" : faltZelle ( $aufzeichnung[ "name" ], "Inhalt" )), "</tr>";
+echo "<tr><td>", viewButton ( "request.php?request=" . $inhalt[ "referenz" ], $_ransehen ), " Request</td><td>", $verbindung[ "_zeitd" ], " <i class=\"fa fa-clock-o\"></i> ", $verbindung[ "_zeitt" ], "</td></tr>";
+echo "<tr><td>Typ</td><td>", strtolower ( $referenz[ "mime" ] ), "</td></tr>";
 echo "<tr><td>Kommunikation</td><td>";
-switch ($inhalt["typ"])
+switch ( $inhalt[ "typ" ] )
 {
   case "request":
   case "requestroh":
@@ -94,15 +94,15 @@ switch ($inhalt["typ"])
     break;
 }
 echo "</td></tr>";
-echo "<tr><td>Bytes</td><td>",strlen($inhalt["inhalt"]),"</td></tr>";
+echo "<tr><td>Bytes</td><td>", strlen ( $inhalt[ "inhalt" ] ), "</td></tr>";
 echo "<tr><td>Server</td>";
-if (!$verbindung["host"])
+if ( !$verbindung[ "host" ] )
 {
-  echo ipHostinfo ($verbindung["ip"], "Inhalt");
+  echo ipHostinfo ( $verbindung[ "ip" ], "Inhalt" );
 }
 else
 {
-  echo idHostinfo ($verbindung["host"], "Inhalt");
+  echo idHostinfo ( $verbindung[ "host" ], "Inhalt" );
 }
 echo "</tr>";
 
@@ -129,14 +129,14 @@ echo <<<LIMIT1
         <div class="panel-body" id="contc">
 LIMIT1;
 
-if (strlen($inhalt["inhalt"])>$inhaltTrunc*$truncScale)
+if ( strlen ( $inhalt[ "inhalt" ] ) > $inhaltTrunc * $truncScale )
 {
-  zeigeInhalt (0, substr($inhalt["inhalt"],0,$inhaltTrunc), $eigenschaften, $referenz["mime"]);
-  zeigeTrunc ($inhaltTrunc, strlen($inhalt["inhalt"]), 0, "contc", $inhalt["id"]);
+  zeigeInhalt ( 0, substr ( $inhalt[ "inhalt" ], 0, $inhaltTrunc ), $eigenschaften, $referenz[ "mime" ] );
+  zeigeTrunc ( $inhaltTrunc, strlen ( $inhalt[ "inhalt" ] ), 0, "contc", $inhalt[ "id" ] );
 }
 else
 {
-  zeigeInhalt (0, $inhalt["inhalt"], $eigenschaften, $referenz["mime"]);
+  zeigeInhalt ( 0, $inhalt[ "inhalt" ], $eigenschaften, $referenz[ "mime" ] );
 }
 
 echo <<<LIMIT1
@@ -156,23 +156,23 @@ echo <<<LIMIT1
 LIMIT1;
 
 $dar = "";
-$cat = explode ("/", $referenz["mime"]);
-switch ($cat[0])
+$cat = explode ( "/", $referenz[ "mime" ] );
+switch ( $cat[ 0 ] )
 {
   case "text":
-    switch ($cat[1])
+    switch ( $cat[ 1 ] )
     {
       case "html":
-        $dar = "<div class=\"iframer\"><iframe src=\"include/inhalt.php?typ=".$inhalt["typ"]."&id=".($inhalt["typ"]=="response"? $referenz["id"]:$inhalt["referenz"])."\"></iframe></div>";
+        $dar = "<div class=\"iframer\"><iframe src=\"include/inhalt.php?typ=" . $inhalt[ "typ" ] . "&id=" . ($inhalt[ "typ" ] == "response" ? $referenz[ "id" ] : $inhalt[ "referenz" ]) . "\"></iframe></div>";
         break;
     }
     break;
   case "image":
-    $dar = "<img class=\"img-responsive center-block canvas\" src=\"include/inhalt.php?typ=".$inhalt["typ"]."&id=".($inhalt["typ"]=="response"? $referenz["id"]:$inhalt["referenz"])."\" onclick=\"this.style.backgroundColor=(this.style.backgroundColor=='#000000'||this.style.backgroundColor=='rgb(0, 0, 0)')?'#ffffff':'#000000';\">";
+    $dar = "<img class=\"img-responsive center-block canvas\" src=\"include/inhalt.php?typ=" . $inhalt[ "typ" ] . "&id=" . ($inhalt[ "typ" ] == "response" ? $referenz[ "id" ] : $inhalt[ "referenz" ]) . "\" onclick=\"this.style.backgroundColor=(this.style.backgroundColor=='#000000'||this.style.backgroundColor=='rgb(0, 0, 0)')?'#ffffff':'#000000';\">";
     break;
 }
 
-if ($dar == "")
+if ( $dar == "" )
 {
   echo <<<LIMIT1
           <span class="emptyPanel">Darstellung</span>
@@ -180,7 +180,7 @@ if ($dar == "")
       </div>
       <div id="respd" class="panel-collapse collapse" role="tabpanel">
         <div class="panel-body">
-          <p>Der MIME-Typ "{$referenz["mime"]}" kann nur als Text dargestellt werden.</p>
+          <p>Der MIME-Typ "{$referenz[ "mime" ]}" kann nur als Text dargestellt werden.</p>
 LIMIT1;
 }
 else
@@ -211,9 +211,9 @@ echo <<<LIMIT1
         <h4 class="panel-title">
 LIMIT1;
 
-$select_s = $db->prepare ("select * from metadaten where request=? and response=1");
-$select_s->execute(array($inhalt["referenz"]));
-if (($meta = $select_s->fetch()) == false)
+$select_s = $db->prepare ( "select * from metadaten where request=? and response=1" );
+$select_s->execute ( array ( $inhalt[ "referenz" ] ) );
+if ( ($meta = $select_s->fetch ()) == false )
 {
   echo <<<LIMIT1
           <span class="emptyPanel">Meta-Daten</span>
@@ -233,8 +233,8 @@ else
       <div id="meta" class="panel-collapse collapse" role="tabpanel">
         <div class="panel-body">
 LIMIT1;
-  echo tableSorter ("Metadaten", "order: [ [0,'asc'] ]");
-  $foldMe = tableFolder ("Metadaten");
+  echo tableSorter ( "Metadaten", "order: [ [0,'asc'] ]" );
+  $foldMe = tableFolder ( "Metadaten" );
   echo <<<LIMIT1
           <div class="table-responsive">
             <table id="Metadaten" class="table table-hover">
@@ -250,12 +250,12 @@ LIMIT1;
   do
   {
     echo "<tr>";
-    echo faltZelle ($meta["feld"], "Metadaten");
-    echo faltZelle ($meta["wert"], "Metadaten");
+    echo faltZelle ( $meta[ "feld" ], "Metadaten" );
+    echo faltZelle ( $meta[ "wert" ], "Metadaten" );
     echo "</tr>";
   }
-  while ($meta = $select_s->fetch());
-  
+  while ( $meta = $select_s->fetch () );
+
   echo "</tbody></table></div>";
 }
 echo <<<LIMIT1
@@ -266,5 +266,4 @@ echo <<<LIMIT1
 LIMIT1;
 
 include ("include/htmlend.php");
-
 ?>

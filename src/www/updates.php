@@ -1,5 +1,11 @@
 <?php
 
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
+
 /**
  * project LiMiT1
  * file updates.php
@@ -11,6 +17,10 @@
  * @copyright (c) 2017, Ulrich Kühn
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
  */
+require ("include/constants.php");
+require ("include/configuration.php");
+require ("include/utility.php");
+
 /**
  * form parameter to check for updates
  */
@@ -49,15 +59,18 @@ $tarFile = "$my_name.tgz";
 $updateelt = "updateinfo";
 
 
-require ("include/constants.php");
-require ("include/configuration.php");
-require ("include/utility.php");
-
 require ("include/http.php");
 require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
-titleAndHelp ( _ ( "Updates" ) );
+
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
+
+titleAndHelp ( _ ( "Updates" ), _ ( "Wenn $my_name online ist, kann geprüft werden, ob eine neue Version verfügbar ist und das System ggf. aktualisiert werden." ) );
 
 /*
  * do actual update

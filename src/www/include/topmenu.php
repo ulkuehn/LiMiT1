@@ -110,6 +110,7 @@ function openMenu ( $fa, $text )
 LIMIT1;
 }
 
+
 /**
  * close a dropdown menu
  */
@@ -117,6 +118,7 @@ function closeMenu ()
 {
   echo "</ul></li>";
 }
+
 
 /**
  * put a separator line in a drop down menu
@@ -127,6 +129,7 @@ function menuSeparator ()
 {
   echo "<li role=\"separator\" class=\"divider\"></li>";
 }
+
 
 /**
  * add an entry to a drop down menu
@@ -145,6 +148,7 @@ function menuEntry ( $url, $fa, $text )
     </li>
 LIMIT1;
 }
+
 
 /**
  * create a utility box (search etc)
@@ -174,6 +178,7 @@ function utilityBox ( $box )
 LIMIT1;
 }
 
+
 /**
  * add an utility box related entry to a drop down menu
  * 
@@ -193,6 +198,7 @@ function boxMenuEntry ( $box )
   echo "</a>";
   echo "</li>";
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -368,7 +374,8 @@ LIMIT1;
 
 if ( file_exists ( $session_file ) ) // we do have a running session
 {
-  $sfile = fopen ( $session_file, "r" );
+  $sfile = fopen ( $session_file,
+                   "r" );
   $sessionID = trim ( fgets ( $sfile ) );
   $sessionIP = trim ( fgets ( $sfile ) );
   $isRunning = trim ( fgets ( $sfile ) );
@@ -397,43 +404,64 @@ echo "</li>";
  * analysis
  */
 
-openMenu ( "fa-bars", _ ( "Auswerten" ) );
+openMenu ( "fa-bars",
+           _ ( "Auswerten" ) );
 
 // recordings
-menuEntry ( "aufzeichnungen.php", "fa-database", _ ( "Aufzeichnungen" ) );
+menuEntry ( "aufzeichnungen.php",
+            "fa-database",
+            _ ( "Aufzeichnungen" ) );
 
 menuSeparator ();
 
 // properties
-menuEntry ( "eigenschaften.php", "fa-tablet", _ ( "Eigenschaften" ) );
+menuEntry ( "properties.php",
+            "fa-tablet",
+            _ ( "Eigenschaften" ) );
 
 // contents
-menuEntry ( "inhalte.php", "fa-file-o", _ ( "Inhalte" ) );
+menuEntry ( "inhalte.php",
+            "fa-file-o",
+            _ ( "Inhalte" ) );
 
 // images
-menuEntry ( "bilder.php", "fa-picture-o", _ ( "Bilder" ) );
+menuEntry ( "bilder.php",
+            "fa-picture-o",
+            _ ( "Bilder" ) );
 
 // metadata
-menuEntry ( "metadaten.php", "fa-tags", _ ( "Metadaten" ) );
+menuEntry ( "metadaten.php",
+            "fa-tags",
+            _ ( "Metadaten" ) );
 
 menuSeparator ();
 
 // HTTP header
-menuEntry ( "headers.php", "fa-header", _ ( "HTTP-Header" ) );
+menuEntry ( "headers.php",
+            "fa-header",
+            _ ( "HTTP-Header" ) );
 
 // cookies
-menuEntry ( "cookies.php", "fa-birthday-cake", _ ( "Cookies" ) );
+menuEntry ( "cookies.php",
+            "fa-birthday-cake",
+            _ ( "Cookies" ) );
 
 // referrals
-menuEntry ( "verweise.php", "fa-exchange", _ ( "Verweise" ) );
+menuEntry ( "verweise.php",
+            "fa-exchange",
+            _ ( "Verweise" ) );
 
 menuSeparator ();
 
 // SSL encryption
-menuEntry ( "sslsuites.php", "fa-key", _ ( "SSL-Verschlüsselung" ) );
+menuEntry ( "sslsuites.php",
+            "fa-key",
+            _ ( "SSL-Verschlüsselung" ) );
 
 // certificates
-menuEntry ( "zertifikate.php", "fa-certificate", _ ( "Zertifikate" ) );
+menuEntry ( "zertifikate.php",
+            "fa-certificate",
+            _ ( "Zertifikate" ) );
 
 closeMenu ();
 
@@ -443,7 +471,8 @@ closeMenu ();
  */
 require_once ("hardware.php");
 
-openMenu ( "fa-globe", _ ( "Internet" ) );
+openMenu ( "fa-globe",
+           _ ( "Internet" ) );
 
 // LAN
 echo "<li id=\"$lanOnlineID\"";
@@ -488,7 +517,8 @@ closeMenu ();
  * Tools
  */
 
-openMenu ( "fa-cog", _ ( "Werkzeuge" ) );
+openMenu ( "fa-cog",
+           _ ( "Werkzeuge" ) );
 
 // search
 boxMenuEntry ( $searchBox );
@@ -502,32 +532,48 @@ boxMenuEntry ( $whoisBox );
 menuSeparator ();
 
 // Manage Devices
-menuEntry ( "devices.php", "fa-tablet", _ ( "Geräte verwalten" ) );
+menuEntry ( "devices.php",
+            "fa-tablet",
+            _ ( "Geräte verwalten" ) );
 
 // Certificate
-menuEntry ( "certmanage.php", "fa-certificate", _ ( "$my_name-Zertifikat" ) );
+menuEntry ( "manageCertificate.php",
+            "fa-certificate",
+            _ ( "$my_name-Zertifikat" ) );
 
 menuSeparator ();
 
 // Import Recording
-menuEntry ( "import.php", "fa-download", _ ( "Aufzeichnung importieren" ) );
+menuEntry ( "import.php",
+            "fa-download",
+            _ ( "Aufzeichnung importieren" ) );
 
 // Clear Database
-menuEntry ( "erase.php", "fa-trash", _ ( "Datenbank leeren" ) );
+menuEntry ( "erase.php",
+            "fa-trash",
+            _ ( "Datenbank leeren" ) );
 
 menuSeparator ();
 
 // Settings
-menuEntry ( "settings.php", "fa-wrench", _ ( "Einstellungen" ) );
+menuEntry ( "settings.php",
+            "fa-wrench",
+            _ ( "Einstellungen" ) );
 
 // Status
-menuEntry ( "status.php", "fa-info", _ ( "Status" ) );
+menuEntry ( "status.php",
+            "fa-info",
+            _ ( "Status" ) );
 
 // Updates
-menuEntry ( "updates.php", "fa-flash", _ ( "Updates" ) );
+menuEntry ( "updates.php",
+            "fa-flash",
+            _ ( "Updates" ) );
 
 // About
-menuEntry ( "about.php", "fa-question", _ ( "Über $my_name" ) );
+menuEntry ( "about.php",
+            "fa-question",
+            _ ( "Über $my_name" ) );
 
 closeMenu ();
 
@@ -536,13 +582,18 @@ closeMenu ();
  * Power
  */
 
-openMenu ( "fa-plug", _ ( "Betrieb" ) );
+openMenu ( "fa-plug",
+           _ ( "Betrieb" ) );
 
 // Shutdown
-menuEntry ( "poweroff.php?restart=0", "fa-power-off", _ ( "Herunterfahren" ) );
+menuEntry ( "poweroff.php?restart=0",
+            "fa-power-off",
+            _ ( "Herunterfahren" ) );
 
 // Restart
-menuEntry ( "poweroff.php?restart=1", "fa-refresh", _ ( "Neu starten" ) );
+menuEntry ( "poweroff.php?restart=1",
+            "fa-refresh",
+            _ ( "Neu starten" ) );
 
 closeMenu ();
 
@@ -581,7 +632,7 @@ echo "</div>";
  */
 echo "</div></div>";
 // hide navbar in extra tabs (search etc)
-if ( $framename != "" )
+if ( isset ( $framename ) && $framename != "" )
 {
   echo "<div class=\"navHider\"></div>";
 }

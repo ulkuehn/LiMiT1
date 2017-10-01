@@ -336,7 +336,7 @@ LIMIT1;
             }
             else
             {
-              $ergebnis[ $ort ] .= "<td>" . viewButton ( "verbindung.php?verbindung=" . $fund[ "referenz" ], $_ansehen ) . "</td>";
+              $ergebnis[ $ort ] .= "<td>" . viewButton ( "verbindung.php?request=" . $fund[ "referenz" ], $_ansehen ) . "</td>";
             }
           }
 

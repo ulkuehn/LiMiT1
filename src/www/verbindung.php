@@ -137,7 +137,7 @@ if ($verbindung["typ"]=="http" || $verbindung["typ"]=="https")
 LIMIT1;
 
   $select_s = $db->prepare("select count(*) from setcookie,cookie where setcookie.cookie=cookie.id and setcookie.verbindung=?");
-  $select_s->execute(array($_GET["verbindung"]));
+  $select_s->execute(array($verbindungId));
   $set = $select_s->fetchColumn();
   
   if (!$set)
@@ -178,7 +178,7 @@ LIMIT1;
 LIMIT1;
     
   $select_s = $db->prepare("select count(*) from sendcookie,cookie where sendcookie.cookie=cookie.id and sendcookie.verbindung=?");
-  $select_s->execute(array($_GET["verbindung"]));
+  $select_s->execute(array($verbindungId));
   $sent = $select_s->fetchColumn();
 
   if (!$sent)
@@ -218,7 +218,7 @@ LIMIT1;
 LIMIT1;
 
   $select_s = $db->prepare ("select * from request where verbindung=? order by id");
-  $select_s->execute(array($_GET["verbindung"]));
+  $select_s->execute(array($verbindungId));
   if (($request = $select_s->fetch()) == false)
   {
     echo <<<LIMIT1
@@ -311,7 +311,7 @@ if ($verbindung["typ"]=="udp")
 LIMIT1;
 
   $select_s = $db->prepare ("select * from inhalt where typ='udpsend' and referenz=?");
-  $select_s->execute (array($_GET["verbindung"]));
+  $select_s->execute (array($verbindungId));
   $versandt = $select_s->fetch();
 
   if ($versandt["inhalt"]=="")
@@ -358,7 +358,7 @@ LIMIT1;
 LIMIT1;
 
   $select_s = $db->prepare ("select * from inhalt where typ='udprcv' and referenz=?");
-  $select_s->execute (array($_GET["verbindung"]));
+  $select_s->execute (array($verbindungId));
   $empfangen = $select_s->fetch();
 
   if ($empfangen["inhalt"]=="")
@@ -438,7 +438,7 @@ LIMIT1;
     if ($verbindung["typ"] == "tcp" || $verbindung["typ"] == "ssl")
     {
       $select_s = $db->prepare ("select * from inhalt where typ='tcp' and referenz=?");
-      $select_s->execute (array($_GET["verbindung"]));
+      $select_s->execute (array($verbindungId));
       $inhalt = $select_s->fetch();
 
       if ((!isset($_GET["inhalt"]) || !$_GET["inhalt"]) && strlen($inhalt["inhalt"])>$inhaltTrunc*$truncScale)
@@ -457,7 +457,7 @@ LIMIT1;
     {
       $inhalt = "";
       $select_s = $db->prepare ("select * from request where verbindung=? order by id");
-      $select_s->execute (array($_GET["verbindung"]));
+      $select_s->execute (array($verbindungId));
       while ($request = $select_s->fetch())
       {
         $inhalt .= $request["methode"]." ".$request["uri"]." ".$request["version"]."\n";
@@ -497,7 +497,7 @@ LIMIT1;
       if ((!isset($_GET["inhalt"]) || !$_GET["inhalt"]) && strlen($inhalt)>$inhaltTrunc*$truncScale)
       {
         zeigeInhalt (0, substr($inhalt,0,$inhaltTrunc), $eigenschaften);
-        zeigeTrunc ($inhaltTrunc, strlen($inhalt), 0, "verbc", -$_GET["verbindung"]);
+        zeigeTrunc ($inhaltTrunc, strlen($inhalt), 0, "verbc", -$verbindungId);
       }
       else
       {

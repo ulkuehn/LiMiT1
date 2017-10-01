@@ -1,23 +1,25 @@
 <?php
 
-//==============================================================================
-//==============================================================================
-//
-//     PROJECT: LiMiT1
-//        FILE: about.php
-//         SEE: https://github.com/ulkuehn/LiMiT1
-//      AUTHOR: Ulrich Kühn
-//
-//       USAGE: by web server
-//
-// DESCRIPTION: used to display several informational notices about a LiMiT1
-//              system, like
-//              - authorship and copyright notice
-//              - third party software and their respective licenses
-//
-//==============================================================================
-//==============================================================================
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
 
+/**
+ * project LiMiT1
+ * file about.php
+ * 
+ * used to display several informational notices about a LiMiT1 system,
+ * such as
+ *  - authorship and copyright notice
+ *  - third party software and their respective licenses
+ * 
+ * @author Ulrich Kühn
+ * @see https://github.com/ulkuehn/LiMiT1
+ * @copyright (c) 2017, Ulrich Kühn
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
+ */
 require ("include/constants.php");
 require ("include/configuration.php");
 require ("include/utility.php");
@@ -26,13 +28,30 @@ require ("include/http.php");
 require ("include/htmlstart.php");
 require ("include/topmenu.php");
 
-function section ( $id, $titel )
+$aboutID = "about";
+
+
+/* ===========================================================================
+ * 
+ * FUNCTIONS
+ * 
+ * ======================================================================== */
+
+/**
+ * display a collapsable section 
+ * 
+ * @param string $id html id of the section
+ * @param string $title title of the section
+ */
+function section ( $id, $title )
 {
+  global $aboutID;
+
   echo <<<LIMIT1
     <div class="panel panel-primary">
-      <div class="panel-heading panelCollapse" role="tab" data-toggle="collapse" data-parent="#about" data-target="#$id">
+      <div class="panel-heading panelCollapse" role="tab" data-toggle="collapse" data-parent="#$aboutID" data-target="#$id">
         <h4 class="panel-title">
-          $titel
+          $title
         </h4>
       </div>
       <div id="$id" class="panel-collapse collapse" role="tabpanel">
@@ -40,13 +59,21 @@ function section ( $id, $titel )
 LIMIT1;
 }
 
-function lizenz ( $produkt, $info, $lizenz = "" )
+
+/**
+ * display information on a software product
+ * 
+ * @param string $product product name
+ * @param string $info extra info
+ * @param string $license license text
+ */
+function licenseInfo ( $product, $info, $license = "" )
 {
   echo <<<LIMIT1
     <div class="panel panel-info">
       <div class="panel-heading" role="tab">
         <h4 class="panel-title">
-          $produkt
+          $product
         </h4>
       </div>
       <div class="panel-body">
@@ -55,9 +82,9 @@ LIMIT1;
   {
     echo "<p>$info</p>";
   }
-  if ( $lizenz != "" )
+  if ( $license != "" )
   {
-    echo "<pre class=\"pre-scrollable\">$lizenz</pre>";
+    echo "<pre class=\"pre-scrollable\">$license</pre>";
   }
   echo <<<LIMIT1
       </div>
@@ -65,42 +92,48 @@ LIMIT1;
 LIMIT1;
 }
 
-titleAndHelp ( "Über $my_name", "" );
 
-echo <<<LIMIT1
-<div class="row">
-  <div class="panel-group" id="about" role="tablist">
-LIMIT1;
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
+
+titleAndHelp ( _ ( "Über $my_name" ),
+                   "" );
+echo "<div class=\"row\"><div class=\"panel-group\" id=\"$aboutID\" role=\"tablist\">";
+
+/*
+ * 
+ * copyright
+ * 
+ */
+section ( "copyright",
+          _ ( "Copyright" ) );
+
+echo "</p>&copy; Ulrich Kühn 2017</p></div></div></div>";
 
 
-// Copyright
-section ( "cr", "Copyright" );
+/*
+ * 
+ * licenses of third party software
+ * 
+ */
+section ( "licenses",
+          _ ( "Verwendete Software Dritter" ) );
 
-echo <<<LIMIT1
-      </p>&copy; Ulrich Kühn 2017</p>
-    </div>
-  </div>
-</div>
-LIMIT1;
+/*
+ * Raspbian
+ */
+licenseInfo ( "Raspbian",
+              _ ( "Siehe <a href=\"https://www.raspbian.org/\" target=\"_blank\">https://www.raspbian.org/</a>.<br>Es gelten die jeweiligen Lizenzbestimmungen der einzelnen Debian-Komponenten. Für Details siehe <a href=\"https://www.debian.org/legal/licenses/\" target=\"_blank\">https://www.debian.org/legal/licenses/</a>." ) );
 
-
-// Lizenzen
-section ( "li", "Verwendete Software Dritter" );
-
-# Raspbian
-lizenz ( "Raspbian"
-    , <<<LIMIT1
-Siehe <a href="https://www.raspbian.org/" target="_blank">https://www.raspbian.org/</a>.<br>
-Es gelten die jeweiligen Lizenzbestimmungen der einzelnen Debian-Komponenten. Für Details siehe <a href="https://www.debian.org/legal/licenses/" target="_blank">https://www.debian.org/legal/licenses/</a>.
-LIMIT1
-);
-
-# SSLsplit
-lizenz ( "SSLsplit"
-    , <<<LIMIT1
-Siehe <a href="https://www.roe.ch/SSLsplit" target="_blank">https://www.roe.ch/SSLsplit</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * SSLsplit
+ */
+licenseInfo ( "SSLsplit",
+              _ ( "Siehe <a href=\"https://www.roe.ch/SSLsplit\" target=\"_blank\">https://www.roe.ch/SSLsplit</a>" ),
+                  <<<LIMIT1
 Copyright
 Copyright (c) 2009-2016, Daniel Roethlisberger and contributors. All rights reserved. Licensed under the 2-clause BSD license contained herein.
 Third-party components
@@ -123,12 +156,12 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 LIMIT1
 );
 
-# Bootstrap
-lizenz ( "Bootstrap"
-    , <<<LIMIT1
-Siehe <a href="https://github.com/twbs/bootstrap" target="_blank">https://github.com/twbs/bootstrap</a> und <a href="http://getbootstrap.com/" target="_blank">http://getbootstrap.com/</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * Bootstrap
+ */
+licenseInfo ( "Bootstrap",
+              _ ( "Siehe <a href=\"https://github.com/twbs/bootstrap\" target=\"_blank\">https://github.com/twbs/bootstrap</a> und <a href=\"http://getbootstrap.com/\" target=\"_blank\">http://getbootstrap.com/</a>" ),
+                  <<<LIMIT1
 The MIT License (MIT)
 
 Copyright (c) 2011-2016 Twitter, Inc.
@@ -153,21 +186,18 @@ THE SOFTWARE.
 LIMIT1
 );
 
-# Font Awesome
-lizenz ( "Font Awesome by Dave Gandy"
-    , <<<LIMIT1
-Siehe <a href="http://fontawesome.io" target="_blank">http://fontawesome.io</a>
-<br>Lizenz für die Fonts: <a href="http://scripts.sil.org/OFL" target="_blank">SIL OFL 1.1</a>
-<br>Lizenz für CSS und andere Dateien: <a href="http://opensource.org/licenses/mit-license.html" target="_blank">MIT License</a>
-LIMIT1
-    , "" );
+/*
+ * Font Awesome
+ */
+licenseInfo ( "Font Awesome by Dave Gandy",
+              _ ( "Siehe <a href=\"http://fontawesome.io\" target=\"_blank\">http://fontawesome.io</a><br>Lizenz für die Fonts: <a href=\"http://scripts.sil.org/OFL\" target=\"_blank\">SIL OFL 1.1</a><br>Lizenz für CSS und andere Dateien: <a href=\"http://opensource.org/licenses/mit-license.html\" target=\"_blank\">MIT License</a>" ) );
 
-# jQuery
-lizenz ( "jQuery"
-    , <<<LIMIT1
-Siehe <a href="http://jquery.com/" target="_blank">http://jquery.com/</a> und <a href="https://github.com/jquery/jquery" target="_blank">https://github.com/jquery/jquery</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * jQuery
+ */
+licenseInfo ( "jQuery",
+              _ ( "Siehe <a href=\"http://jquery.com/\" target=\"_blank\">http://jquery.com/</a> und <a href=\"https://github.com/jquery/jquery\" target=\"_blank\">https://github.com/jquery/jquery</a>" ),
+                  <<<LIMIT1
 Copyright jQuery Foundation and other contributors, https://jquery.org/
 
 Permission is hereby granted, free of charge, to any person obtaining
@@ -191,12 +221,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 LIMIT1
 );
 
-# DataTables
-lizenz ( "DataTables Table plug-in for jQuery"
-    , <<<LIMIT1
-Siehe <a href="https://datatables.net/" target="_blank">https://datatables.net/</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * DataTables
+ */
+licenseInfo ( "DataTables Table plug-in for jQuery",
+              _ ( "Siehe <a href=\"https://datatables.net/\" target=\"_blank\">https://datatables.net/</a>" ),
+                  <<<LIMIT1
 Copyright (C) 2008-2016, SpryMedia Ltd.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
@@ -213,12 +243,12 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 LIMIT1
 );
 
-# jQuery.Syntax
-lizenz ( "jQuery.Syntax"
-    , <<<LIMIT1
-Siehe <a href="http://www.codeotaku.com/projects/jquery-syntax/index" target="_blank">http://www.codeotaku.com/projects/jquery-syntax/index</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * jQuery.Syntax
+ */
+licenseInfo ( "jQuery.Syntax",
+              _ ( "Siehe <a href=\"http://www.codeotaku.com/projects/jquery-syntax/index\" target=\"_blank\">http://www.codeotaku.com/projects/jquery-syntax/index</a>" ),
+                  <<<LIMIT1
 Copyright (c) 2011 Samuel G. D. Williams.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
@@ -235,12 +265,12 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEAL
 LIMIT1
 );
 
-# Parsedown
-lizenz ( "Parsedown - Markdown Parser in PHP"
-    , <<<LIMIT1
-Siehe <a href="https://github.com/erusev/parsedown" target="_blank">https://github.com/erusev/parsedown</a> und <a href="http://parsedown.org" target="_blank">http://parsedown.org</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * Parsedown
+ */
+licenseInfo ( "Parsedown - Markdown Parser in PHP",
+              _ ( "Siehe <a href=\"https://github.com/erusev/parsedown\" target=\"_blank\">https://github.com/erusev/parsedown</a> und <a href=\"http://parsedown.org\" target=\"_blank\">http://parsedown.org</a>" ),
+                  <<<LIMIT1
 The MIT License (MIT)
 
 Copyright (c) 2013 Emanuil Rusev, erusev.com
@@ -264,12 +294,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 LIMIT1
 );
 
-# Bootswatch themes
-lizenz ( "Bootswatch - Free themes for Bootstrap"
-    , <<<LIMIT1
-Siehe <a href="https://bootswatch.com/" target="_blank">https://bootswatch.com/</a> und <a href="https://github.com/thomaspark/bootswatch" target="_blank">https://github.com/thomaspark/bootswatch</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * Bootswatch themes
+ */
+licenseInfo ( "Bootswatch - Free themes for Bootstrap",
+              _ ( "Siehe <a href=\"https://bootswatch.com/\" target=\"_blank\">https://bootswatch.com/</a> und <a href=\"https://github.com/thomaspark/bootswatch\" target=\"_blank\">https://github.com/thomaspark/bootswatch</a>" ),
+                  <<<LIMIT1
 The MIT License (MIT)
 
 Copyright (c) 2013 Thomas Park
@@ -294,12 +324,12 @@ THE SOFTWARE.
 LIMIT1
 );
 
-# Fonts
-lizenz ( "Lato Font"
-    , <<<LIMIT1
-Siehe <a href="http://www.latofonts.com/" target="_blank">http://www.latofonts.com/</a>
-LIMIT1
-    , <<<LIMIT1
+/*
+ * Fonts
+ */
+licenseInfo ( "Lato Font",
+              _ ( "Siehe <a href=\"http://www.latofonts.com/\" target=\"_blank\">http://www.latofonts.com/</a>" ),
+                  <<<LIMIT1
 Copyright (c) 2010-2014 by tyPoland Lukasz Dziedzic (team@latofonts.com) with Reserved Font Name "Lato"
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -396,11 +426,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
 );
 
-lizenz ( "News Cycle Font"
-    , <<<LIMIT1
-Siehe <a href="https://launchpad.net/newscycle" target="_blank">https://launchpad.net/newscycle</a>
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "News Cycle Font",
+              _ ( "Siehe <a href=\"https://launchpad.net/newscycle\" target=\"_blank\">https://launchpad.net/newscycle</a>" ),
+                  <<<LIMIT1
 Copyright (c) 2010-2011, Nathan Willis (nwillis@glyphography.com), with Reserved Font Name "News Cycle."
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -497,11 +525,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
 );
 
-lizenz ( "Open Sans Font"
-    , <<<LIMIT1
-Siehe <a href="http://www.opensans.com/" target="_blank">http://www.opensans.com/</a>
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "Open Sans Font",
+              _ ( "Siehe <a href=\"http://www.opensans.com/\" target=\"_blank\">http://www.opensans.com/</a>" ),
+                  <<<LIMIT1
 
                                  Apache License
                            Version 2.0, January 2004
@@ -707,10 +733,9 @@ LIMIT1
 LIMIT1
 );
 
-lizenz ( "Raleway Font"
-    , <<<LIMIT1
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "Raleway Font",
+              "",
+              <<<LIMIT1
 Copyright (c) 2010, Matt McInerney (matt@pixelspread.com),
 Copyright (c) 2011, Pablo Impallari (www.impallari.com|impallari@gmail.com),
 Copyright (c) 2011, Rodrigo Fuenzalida (www.rfuenzalida.com|hello@rfuenzalida.com), with Reserved Font Name Raleway
@@ -809,11 +834,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
 );
 
-lizenz ( "Roboto Font"
-    , <<<LIMIT1
-Siehe <a href="https://material.io/guidelines/resources/roboto-noto-fonts.html" target="_blank">https://material.io/guidelines/resources/roboto-noto-fonts.html</a>
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "Roboto Font",
+              _ ( "Siehe <a href=\"https://material.io/guidelines/resources/roboto-noto-fonts.html\" target=\"_blank\">https://material.io/guidelines/resources/roboto-noto-fonts.html</a>" ),
+                  <<<LIMIT1
 
                                  Apache License
                            Version 2.0, January 2004
@@ -1019,11 +1042,9 @@ LIMIT1
 LIMIT1
 );
 
-lizenz ( "Source Sans Pro Font"
-    , <<<LIMIT1
-Siehe <a href="https://github.com/adobe-fonts/source-sans-pro" target="_blank">https://github.com/adobe-fonts/source-sans-pro</a>
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "Source Sans Pro Font",
+              _ ( "Siehe <a href=\"https://github.com/adobe-fonts/source-sans-pro\" target=\"_blank\">https://github.com/adobe-fonts/source-sans-pro</a>" ),
+                  <<<LIMIT1
 Copyright 2010, 2012, 2014 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'. All Rights Reserved. Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -1120,11 +1141,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
 );
 
-lizenz ( "Ubuntu Font"
-    , <<<LIMIT1
-Siehe <a href="http://font.ubuntu.com/" target="_blank">http://font.ubuntu.com/</a>
-LIMIT1
-    , <<<LIMIT1
+licenseInfo ( "Ubuntu Font",
+              _ ( "Siehe <a href=\"http://font.ubuntu.com/\" target=\"_blank\">http://font.ubuntu.com/</a>" ),
+                  <<<LIMIT1
 -------------------------------
 UBUNTU FONT LICENCE Version 1.0
 -------------------------------
@@ -1224,25 +1243,24 @@ DEALINGS IN THE FONT SOFTWARE.
 LIMIT1
 );
 
-echo <<<LIMIT1
-        </div>
-      </div>
-    </div>    
-LIMIT1;
+echo "</div></div></div>";
 
 
-// Startprotokoll
+/*
+ * 
+ * extra infos if debugging option is set
+ * 
+ */
 if ( $__debug )
 {
-  section ( "sp", "Startprotokoll" );
+  section ( "startlog",
+            _ ( "Startprotokoll" ) );
 
   echo "<pre class=\"pre-scrollable\">";
   echo file_get_contents ( $logfile );
-  echo "</pre>";
-  echo "</div></div></div>";
+  echo "</pre></div></div></div>";
 }
 
 echo "</div></div>";
 
 require ("include/htmlend.php");
-?>

@@ -34,28 +34,28 @@ LIMIT1
 
 echo <<<LIMIT1
 <div class="row">
-  <div class="panel-group" id="status" role="tablist">
+  <div class="panel-group" id="xstatus" role="tablist">
     <p class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-lg"></i></p>
   </div>
 </div>
 
 <script>
-function status()
+function xstatus()
 {
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() 
   {
     if (xmlhttp.readyState==4 && xmlhttp.status==200) 
     {
-      document.getElementById("status").innerHTML = xmlhttp.responseText;
+      document.getElementById("xstatus").innerHTML = xmlhttp.responseText;
     }
   }
   
   xmlhttp.open("GET","include/status.php",true);
   xmlhttp.send();
 }
-status ();
-var myVar = setInterval (function () { status() }, 2500);
+xstatus ();
+var myVar = setInterval (function () { xstatus() }, 2500);
 </script>
 
 LIMIT1;

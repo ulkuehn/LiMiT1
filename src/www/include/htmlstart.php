@@ -16,7 +16,8 @@
 //==============================================================================
 
 
-$extratitel = isset($extratitel)? $extratitel : "";
+$extratitel = isset ( $extratitel ) ? $extratitel : "";
+$framename = isset ( $framename ) ? $framename : "";
 
 echo <<<LIMIT1
 <!DOCTYPE html>
@@ -28,7 +29,7 @@ echo <<<LIMIT1
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 LIMIT1;
 
-if ($__skin != "")
+if ( $__skin != "" )
 {
   echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"$skin_dir$__skin\">";
 }

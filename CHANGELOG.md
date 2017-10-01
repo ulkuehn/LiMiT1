@@ -4,6 +4,24 @@
 
 ---
 
+## [1.1.3] - Improvements - 1. Oct 2017
+
+### Added
+
+Nothing.
+
+### Changed
+
+- improved check for having successfully gone online (forcing ntp update)
+- no need to specify at least one SSL port in settings any more (if field is left blank, every port is considered non-SSL, so no decryption takes place)
+- on shutdown visualize when system can savely be powered off
+- some minor bugfixes
+- numerous code improvements (comments etc)
+
+### Removed
+
+Nothing.
+
 ## [1.1.2] - Bugfixes - 24. Sept 2017
 
 ### Added
@@ -66,7 +84,8 @@ Nothing.
 Nothing.
 
 
-[Current]: https://github.com/ulkuehn/LiMiT1/compare/v1.1.2...HEAD
+[Current]: https://github.com/ulkuehn/LiMiT1/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/ulkuehn/LiMiT1/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/ulkuehn/LiMiT1/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/ulkuehn/LiMiT1/compare/v1.0.4...v1.1.1
 [1.0.4]: https://github.com/ulkuehn/LiMiT1/compare/v1.0.1...v1.0.4

@@ -33,25 +33,22 @@ if ( file_exists ( $online_script ) )
   exec ( "/bin/bash $online_script" );
   sleep ( 2 );
 
-  $fp = fsockopen ( "udp://pool.ntp.org", 123, $errno, $errstr, 10 );
-  if ( $fp )
+  for ( $pool = 0; $pool < 3 && $ok == 0; $pool++ )
   {
-    fclose ( $fp );
-
-    exec ( "/usr/sbin/service ntp stop" );
-    exec ( "/bin/date -s \"01/01/2000 00:00:00\"" );
-    exec ( "/usr/sbin/service ntp start" );
-
-    $to = 60;
-    while ( $to && strftime ( "%Y" ) == "2000" )
+    $fp = fsockopen ( "udp://$pool.pool.ntp.org", 123, $errno, $errstr, 10 );
+    if ( $fp )
     {
-      sleep ( 1 );
-      $to--;
-    }
+      fclose ( $fp );
 
-    if ( strftime ( "%Y" ) != "2000" )
-    {
-      $ok = 1;
+      exec ( "/usr/sbin/service ntp stop" );
+      exec ( "/bin/date -s \"01/01/2000 00:00:00\"" );
+      exec ( "/usr/bin/sntp -s $pool.pool.ntp.org" );
+      exec ( "/usr/sbin/service ntp start" );
+
+      if ( strftime ( "%Y" ) != "2000" )
+      {
+        $ok = 1;
+      }
     }
   }
   unlink ( $online_script );
