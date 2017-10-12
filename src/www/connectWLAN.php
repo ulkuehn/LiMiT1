@@ -87,7 +87,7 @@ else
 
 LIMIT1
                     . ($pass == ""? "/sbin/iwconfig $wireless_internet essid \"$connectTo\"" : "/usr/bin/killall wpa_supplicant\n/sbin/wpa_supplicant -B -D nl80211 -i $wireless_internet -c $wpa_supplicant_configfile")
-                    . "\n/sbin/dhclient -v -pf $dhclient_pidfile -lf $dhclient_leasefile $wireless_internet"
+                    . "\n/sbin/dhclient -v -pf $dhclient_pidfile -lf $dhclient_leasefile $wireless_internet\n"
                     , $wireless_internet );
               
       if ($pass != "")

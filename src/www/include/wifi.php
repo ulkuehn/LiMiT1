@@ -45,7 +45,7 @@ else
     {
       $essid = $ma[ 1 ];
     }
-    if ( preg_match ( "/^\s*WP[AS]:/", $line ) )
+    if ( preg_match ( "/^\s*WP[AS]:/", $line ) || preg_match ( "/^\s*RSN:/", $line ) )
     {
       $enc = 1;
     }
