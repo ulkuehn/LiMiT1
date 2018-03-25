@@ -210,7 +210,7 @@ if ( isset ( $_REQUEST[ $__[ "updates" ][ "params" ][ "installUpdate" ] ] ) )
                 echo "</h1></div></div></div>";
                 exec ( "(/bin/sleep 3 && /sbin/reboot) > /dev/null 2>&1 &" );
                 waitForReboot ( $__[ "updates" ] [ "ids" ] [ "bye" ],
-                                "fa-bolt",
+                                "fa-clock-o fa-2x",
                                 "/updateReport.php?" . $__[ "updateReport" ][ "params" ][ "oldVersion" ] . "=$my_version" );
               }
             }

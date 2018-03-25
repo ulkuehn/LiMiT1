@@ -31,7 +31,7 @@ myName="LiMiT1"
 # major version; full version number is "major.minor"
 majorVersion="1.2"
 # minor version counter, may get updated automagically by git commit
-minorVersion="1"
+minorVersion="2"
 # codename
 versionName="Farmsen"
 
@@ -1040,6 +1040,25 @@ then
     echo "no certificate found" | logo
   fi
   echo "... certificate copied\\n" | log
+fi
+
+
+#-------------------------------------------------------------------------------
+# move database
+#-------------------------------------------------------------------------------
+
+# do this only on update install
+if [ $update -eq 1 ]
+then
+  echo "moving database ..." | log
+  
+  if [ -e $basedir/$datadir ]
+  then
+    /bin/mv $basedir/$datadir $installdir
+  else
+    echo "no database found" | logo
+  fi
+  echo "... database moved\\n" | log
 fi
 
 

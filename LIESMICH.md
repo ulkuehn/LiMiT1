@@ -149,7 +149,7 @@ Als Stromquelle ist neben einem Netzteil mit Mikro-USB-Anschluss auch ein entspr
 
 Nach dem Start stellt das System ein WLAN zur Verfügung, über das sich andere Geräte  mit LiMiT1 verbinden können. Der Zugriff erfolgt über eine Web-Schnittstelle, d.h. den Internet-Browser.
 
-Die SSID, das Passwort und die IP-Adresse bzw. Domainnamen, unter dem LiMiT1 erreichbar ist, können in den [Einstellungen](#einstellungen) geändert werden. Direkt nach der Installation gelten folgende Standardwerte:
+Die SSID, das Passwort und die IP-Adresse bzw. Domainnamen, unter dem LiMiT1 erreichbar ist, können in den Einstellungen geändert werden. Direkt nach der Installation gelten folgende Standardwerte:
 
 Parameter | Standardwert
 --- | ---
@@ -183,7 +183,7 @@ Zudem können verschiedene Ansichtsparameter verändert werden. Bei manchen Änd
 
 ### Zertifikat
 
-LiMiT1 wird aus Sicherheitsgründen ohne Standard-Zertifikat ausgeliefert. Vor der ersten Aufzeichnung muss daher ein individuelles Zertifikat erzeugt werden (siehe [Zertifikat](#zertifikat)) und dieses auf sämtlichen Geräten installiert werden, deren verschlüsselter Datenverkehr aufgezeichnet werden soll.
+LiMiT1 wird aus Sicherheitsgründen ohne Standard-Zertifikat ausgeliefert. Vor der ersten Aufzeichnung muss daher ein individuelles Zertifikat erzeugt werden und dieses auf sämtlichen Geräten installiert werden, deren verschlüsselter Datenverkehr aufgezeichnet werden soll.
 
 
 
