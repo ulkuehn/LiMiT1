@@ -12,14 +12,14 @@
 #
 #  DESCRIPTION: script to install or update a LiMit1 system
 #               available options:
-#                 -r <password> set root password (default is '$password')
-#                 -l <country.coding> set system locale (default is $locale_country.$locale_coding')
+#                 -r <password> set root password (default is '$rootPassword')
+#                 -l <country.coding> set system locale (default is $localeCountry.$localeCoding')
 #                 -L list available locales and exit
 #                 -t <timezone> set system timezone (default is '$timezone')
 #                 -T list available timezones and exit
-#                 -s <ssid> set default ssid for LiMiT1 wifi (default is '$__wlan_ssid')
-#                 -p <password> set default password for LiMiT1 wifi (default is '$__wlan_password')
-#                 -c <channel> set default wifi channel (default is $__wlan_channel)
+#                 -s <ssid> set default ssid for LiMiT1 wifi (default is '$wifiSSID')
+#                 -p <password> set default password for LiMiT1 wifi (default is '$wifiPassword')
+#                 -c <channel> set default wifi channel (default is $wifiChannel)
 #
 #===============================================================================
 #===============================================================================
@@ -27,91 +27,50 @@
 ### base configuration
 
 # full name
-my_name="LiMiT1"
+myName="LiMiT1"
 # major version; full version number is "major.minor"
-my_major="1.1"
+majorVersion="1.2"
 # minor version counter, may get updated automagically by git commit
-my_minor="3"
+minorVersion="1"
+# codename
+versionName="Farmsen"
 
 # root password
-password="limit1"
+rootPassword="limit1"
 
 # name of configuration file
-config_file="configuration"
+configurationFile="configuration"
 
 # name of constants file
-constants_file="constants"
+constantsFile="constants"
 
 
 ### default system configuration
 
 # keyboard
-keyboard_model="pc105"
-keyboard_layout="de"
+keyboardModel="pc105"
+keyboardLayout="de"
 
 # console
-console_charmap="UTF-8"
+consoleCharmap="UTF-8"
 
 # locale
-locale_country="de_DE"
-locale_coding="UTF-8"
+localeCountry="de_DE"
+localeCoding="UTF-8"
 
 # timezone
 timezone="Europe/Berlin"
 
-
-### default configuration
-
-# menu boxes
-__suchbox="1"
-__dekodbox="1"
-__whoisbox="1"
-__usetabs="1"
-
-# skin
-__skin=""
-
-# tables
-__klick="oncontextmenu"
-__zeilen="5 10 25"
-
-# dns
-__dns_server_name="lim"
-__dns_domain_name="it1"
-
 # own wifi
-__wlan_ssid="limit1"
-__wlan_password="limit1limit"
-__wlan_channel="5"
-
-# own wifi network
-__ip_ip1="172"
-__ip_ip2="16"
-__ip_ip3="0"
-__ip_mask="255.255.255.0"
-
-# own ip address within network
-__ip_ip="1"
-
-# dhcp range
-__ip_dhcp1="2"
-__ip_dhcp2="254"
-
-# internet routing
-__internet_aufzeichnung="1"
-
-# ports
-__tcp_ports=""
-__ssl_ports="443"
-
-# umts
-__umts="Tchibo Mobil:webmobil1;O2:pinternet.interkom.de;Vodafone:web.vodafone.de"
+wifiSSID="limit1"
+wifiPassword="limit1limit"
+wifiChannel="5"
 
 
 ### software
 
 # list of packages to install
-packages="bzip2 patch make gcc pkg-config usbutils unzip \
+installPackages="bzip2 patch make gcc pkg-config usbutils unzip \
 libssl-dev libevent-dev libusb-1.0-0-dev \
 bind9 dnsutils whois \
 wireless-tools wpasupplicant hostapd \
@@ -121,40 +80,42 @@ usb-modeswitch wvdial tcpdump iptables protobuf-compiler exiv2 \
 tcl curl mariadb-server"
 
 # parameters for non-interactive installation of packages
-set_selections=("mysql-server-5.5 mysql-server/root_password password root" \
+setSelections=("mysql-server-5.5 mysql-server/root_password password root" \
 "mysql-server-5.5 mysql-server/root_password_again password root")
 
 # list of preinstalled services to disable
-services="ntp ssh bind9 hostapd lighttpd dhcpcd dhcpd isc-dhcp-client isc-dhcp-server mysql"
+disableServices="ntp ssh bind9 hostapd lighttpd dhcpcd dhcpd isc-dhcp-client isc-dhcp-server mysql"
 
 # revision numbers of pi2 and pi3 models
-pi2revisions="a01040 a01041 a21041 a22042"
-pi3revisions="a02082 a22082"
+# see https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+pi0Revisions="900092 900093 9000c1 920093"
+pi2Revisions="a01040 a01041 a21041 a22042"
+pi3Revisions="a02082 a22082 a32082 a020d3"
 
 # dns root hints URL
-hintsurl="http://www.orsn.org/roothint/root-hint.txt"
+rootHintsURL="http://www.orsn.org/roothint/root-hint.txt"
 
 
 ### no changes beyond this line!
 ### usage, help
 
-usage="for help use: ${BASH_SOURCE[0]} -h"
-help="${BASH_SOURCE[0]}
+usageString="for help use: ${BASH_SOURCE[0]} -h"
+helpString="${BASH_SOURCE[0]}
 script to put up a LiMiT1 system on a raspbian install
 must be invoked with root privileges (e.g. sudo)
 options:
-  -r <password> set root password (default is '$password')
-  -l <country.coding> set system locale (default is '$locale_country.$locale_coding')
+  -r <password> set root password (default is '$rootPassword')
+  -l <country.coding> set system locale (default is '$localeCountry.$localeCoding')
   -L list available locales and exit
   -t <timezone> set system timezone (default is '$timezone')
   -T list available timezones and exit
-  -s <ssid> set default ssid for LiMiT1 wifi (default is '$__wlan_ssid')
-  -p <password> set default password for LiMiT1 wifi (default is '$__wlan_password')
-  -c <channel> set default wifi channel (default is $__wlan_channel)
+  -s <ssid> set default ssid for LiMiT1 wifi (default is '$wifiSSID')
+  -p <password> set default password for LiMiT1 wifi (default is '$wifiPassword')
+  -c <channel> set default wifi channel (default is $wifiChannel)
 "
 
-# sanitize my_name for use as installation base
-myname=$(echo -n $my_name | tr '[:upper:]' '[:lower:]' | tr '[:space:]' '_')
+# sanitize myName for use as installation base
+myname=$(echo -n $myName | tr '[:upper:]' '[:lower:]' | tr '[:space:]' '_')
 basedir="/$myname"
 # relative to basedir
 tempdir="tmp"
@@ -265,17 +226,17 @@ echo "checking mode ..." | log
 
 if [ -d $basedir ]
 then
-  echo "$my_name installation exists, doing update" | logo
+  echo "$myName installation exists, doing update" | logo
   update=1
   # use a new dir as (temporary) installation base
   installdir="${basedir}.update"
   # unset configuration params (some might be reset by options)
-  password=
-  locale_country=
-  locale_coding=
+  rootPassword=
+  localeCountry=
+  localeCoding=
   timezone=
 else
-  echo "no $my_name system found, doing first install" | logo
+  echo "no $myName system found, doing first install" | logo
   update=0
   installdir=$basedir
 fi
@@ -289,9 +250,19 @@ echo "... mode checked\\n" | log
 
 echo "checking hardware ..." | log
 
-model=0
+model=
 revision=`/bin/cat /proc/cpuinfo | /bin/grep -i "^Revision" | cut -d':' -f2 | tr -d ' '`
-for rev in $pi2revisions
+# pi zero
+for rev in $pi0Revisions
+do
+  if [ $rev == $revision ]
+  then
+    model=0
+    echo "running on a Raspberry Pi Zero (revision $revision)" | logo
+  fi
+done
+# pi 2
+for rev in $pi2Revisions
 do
   if [ $rev == $revision ]
   then
@@ -299,7 +270,8 @@ do
     echo "running on a Raspberry Pi2 (revision $revision)" | logo
   fi
 done
-for rev in $pi3revisions
+# pi 3
+for rev in $pi3Revisions
 do
   if [ $rev == $revision ]
   then
@@ -308,9 +280,9 @@ do
   fi
 done
 
-if [ $model -lt 2 ]
+if [ -z "$model" ]
 then
-  echo "not running on a Raspberry Pi2 or Pi3 -- no guarantee this might work" | logo
+  echo "not running on a Raspberry Pi Zero, Model 2 or Model 3 -- no guarantee this might work" | logo
 fi
 
 echo "... hardware checked\\n" | log
@@ -328,7 +300,7 @@ do
   
   # help
   h )
-    echo -e "$help"
+    echo -e "$helpString"
     exit 0
     ;;
   # set root password
@@ -337,8 +309,8 @@ do
     then
       abort "root password must not be empty"
     fi
-    password=$OPTARG
-    echo "root password is '$password'" | logo
+    rootPassword=$OPTARG
+    echo "root password is '$rootPassword'" | logo
     ;;
   # set ssid
   s )
@@ -346,8 +318,8 @@ do
     then
       abort "ssid must not be empty"
     fi
-    __wlan_ssid=$OPTARG
-    echo "$my_name ssid is '$__wlan_ssid'" | logo
+    wifiSSID=$OPTARG
+    echo "$myName ssid is '$wifiSSID'" | logo
     ;;
   # set wifi password
   p )
@@ -355,8 +327,8 @@ do
     then
       abort "wifi password must not be empty"
     fi
-    __wlan_password=$OPTARG
-    echo "wifi password is '$__wlan_password'" | logo
+    wifiPassword=$OPTARG
+    echo "wifi password is '$wifiPassword'" | logo
     ;;
   # set wifi channel
   c )
@@ -372,8 +344,8 @@ do
     then
       abort "wifi channel must be number between 1 and 14"
     fi
-    __wlan_channel=$OPTARG
-    echo "wifi channel is '$__wlan_channel'" | logo
+    wifiChannel=$OPTARG
+    echo "wifi channel is '$wifiChannel'" | logo
     ;;
   # list locales
   L )
@@ -387,14 +359,14 @@ do
     then
       abort "locale must not be empty"
     fi
-    locale_country="${OPTARG%.*}"
-    locale_coding="${OPTARG#*.}"
-    if [ $locale_country == $locale_coding ]
+    localeCountry="${OPTARG%.*}"
+    localeCoding="${OPTARG#*.}"
+    if [ $localeCountry == $localeCoding ]
     then
       abort "locale argument must be given as <country.coding>"
     fi
-    locale_coding=$(echo $locale_coding | /usr/bin/tr '[:lower:]' '[:upper:]')
-    echo "locale is '$locale_country' '$locale_coding'" | logo
+    localeCoding=$(echo $localeCoding | /usr/bin/tr '[:lower:]' '[:upper:]')
+    echo "locale is '$localeCountry' '$localeCoding'" | logo
     ;;
   # list timezones
   T )
@@ -426,7 +398,7 @@ do
     ;;
 
   \? )
-    abort "invalid option \"-$OPTARG\" -- $usage"
+    abort "invalid option \"-$OPTARG\" -- $usageString"
     ;;
     
   : )
@@ -445,12 +417,12 @@ echo "... options checked\\n" | log
 
 echo "setting root password ..." | log
 
-if [ -z "$password" ]
+if [ -z "$rootPassword" ]
 then
   echo "leaving root password unchanged" | logo
 else
-  echo "using '$password'" | logo
-  result=$(echo -e "$password\n$password" | /usr/bin/passwd root 2>&1)
+  echo "using '$rootPassword'" | logo
+  result=$(echo -e "$rootPassword\n$rootPassword" | /usr/bin/passwd root 2>&1)
   if [ $? -ne 0 ]
   then
     echo $result | logo
@@ -528,8 +500,8 @@ then
 # KEYBOARD CONFIGURATION FILE
 # Consult the keyboard(5) manual page.
 
-XKBMODEL="$keyboard_model"
-XKBLAYOUT="$keyboard_layout"
+XKBMODEL="$keyboardModel"
+XKBLAYOUT="$keyboardLayout"
 BACKSPACE="guess"
 LIMIT1
 
@@ -538,7 +510,7 @@ LIMIT1
 # Consult the console-setup(5) manual page.
 
 ACTIVE_CONSOLES="/dev/tty[1-6]"
-CHARMAP="$console_charmap"
+CHARMAP="$consoleCharmap"
 CODESET="guess"
 FONTFACE="Fixed"
 FONTSIZE="8x16"
@@ -559,7 +531,7 @@ fi
 # change locale
 #-------------------------------------------------------------------------------
 
-if [ -n "$locale_country" ] && [ -n "$locale_coding" ]
+if [ -n "$localeCountry" ] && [ -n "$localeCoding" ]
 then
   echo "changing locale ..." | log
 
@@ -569,11 +541,11 @@ then
   /usr/bin/localedef -i en_GB -c -f UTF-8 -A /usr/share/locale/locale.alias en_GB.UTF-8 2>&1 | logoo
   echo "locale en_GB.UTF-8 created" | logo
   
-  /usr/bin/localedef -i $locale_country -c -f $locale_coding -A /usr/share/locale/locale.alias $locale_country.$locale_coding 2>&1 | logoo
-  echo "locale $locale_country.$locale_coding created" | logo
+  /usr/bin/localedef -i $localeCountry -c -f $localeCoding -A /usr/share/locale/locale.alias $localeCountry.$localeCoding 2>&1 | logoo
+  echo "locale $localeCountry.$localeCoding created" | logo
   
-  echo LANG=$locale_country.$locale_coding > /etc/default/locale
-  echo "locale $locale_country.$locale_coding set as default" | logo
+  echo LANG=$localeCountry.$localeCoding > /etc/default/locale
+  echo "locale $localeCountry.$localeCoding set as default" | logo
 
   echo "... locale changed\\n" | log
 fi
@@ -604,12 +576,12 @@ if [ $update -eq 0 ]
 then
   echo "installing raspbian packages ..." | log
 
-  for i in ${!set_selections[*]}
+  for i in ${!setSelections[*]}
   do
-    echo ${set_selections[$i]} | /usr/bin/debconf-set-selections | logo
+    echo ${setSelections[$i]} | /usr/bin/debconf-set-selections | logo
   done
 
-  /usr/bin/apt-get -y install $packages 2>&1 | logo
+  /usr/bin/apt-get -y install $installPackages 2>&1 | logo
   pista=${PIPESTATUS[0]}
   if [ $pista -ne 0 ]
   then
@@ -629,13 +601,13 @@ if [ $update -eq 0 ]
 then
   echo "disabling services ..." | log
 
-  for service in $services
+  for service in $disableServices
   do
     /bin/systemctl disable $service 2>&1 | logoo
     pista=${PIPESTATUS[0]}
     if [ $pista -ne 0 ]
     then
-      abort "'/bin/systemctl disable $service' terminated with exit code $pista"
+      echo "'/bin/systemctl disable $service' terminated with exit code $pista" | logo
     else
       echo "service $service disabled" | logo
     fi
@@ -701,7 +673,7 @@ proc            /proc         proc    defaults                                  
 /dev/mmcblk0p2  /             ext4    defaults,noatime                            0 1
 tmpfs           /tmp          tmpfs   defaults,noatime,nosuid,mode=0777,size=50%  0 0
 tmpfs           /var/log      tmpfs   defaults,noatime,nosuid,mode=0777,size=50%  0 0
-tmpfs           $basedir/tmp  tmpfs   defaults,noatime,nosuid,mode=0777,size=50%  0 0
+tmpfs           $basedir/$tempdir tmpfs defaults,noatime,nosuid,mode=0777,size=50%  0 0
 LIMIT1
   echo "mount configuration is:" | logo
   /bin/cat /etc/fstab | logoo
@@ -727,11 +699,11 @@ then
     mkdir /etc/bind
   fi
 
-  /usr/bin/wget $hintsurl -O $tmphints 2>&1 | logo
+  /usr/bin/wget $rootHintsURL -O $tmphints 2>&1 | logo
   pista=${PIPESTATUS[0]}
   if [ $pista -ne 0 ]
   then
-    abort "'/usr/bin/wget $hintsurl -O $tmphints' terminated with exit code $pista"
+    abort "'/usr/bin/wget $rootHintsURL -O $tmphints' terminated with exit code $pista"
   else
     if ! [ -s "$tmphints" ]
     then
@@ -827,40 +799,6 @@ echo "... software installed\\n" | log
 
 
 #-------------------------------------------------------------------------------
-# patch udev rule file (enable modeswitch for HUAWEI 3G modems)
-# see https://github.com/RPi-Distro/repo/issues/47
-# might well be distro spedific!
-#-------------------------------------------------------------------------------
-
-echo "patching udev rule file ..." | log
-
-# reverse previous patch first (only on update install)
-if [ $update -eq 1 ]
-then
-  /usr/bin/patch -R /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch 2>&1 | logoo
-  pista=${PIPESTATUS[0]}
-  if [ $pista -ne 0 ]
-  then
-    abort "'/usr/bin/patch -R /lib/udev/rules.d/40-usb_modeswitch.rules $basedir/40-usb_modeswitch.rules.patch' terminated with exit code $pista"
-  else
-    echo "successfully reversed previous patch" | logo
-  fi
-fi
-
-/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $installdir/40-usb_modeswitch.rules.patch 2>&1 | logoo
-pista=${PIPESTATUS[0]}
-if [ $pista -ne 0 ]
-then
-  abort "'/usr/bin/patch /lib/udev/rules.d/40-usb_modeswitch.rules $installdir/40-usb_modeswitch.rules.patch' terminated with exit code $pista"
-else
-  echo "successfully applied patch file:" | logo
-  /bin/cat $installdir/40-usb_modeswitch.rules.patch | logoo
-fi
-
-echo "... udev rule file patched\\n" | log
-
-
-#-------------------------------------------------------------------------------
 # patch and make sslsplit
 #-------------------------------------------------------------------------------
 
@@ -909,32 +847,34 @@ echo "making configuration file ..." | log
 # on update install read config values from exisiting installation
 if [ $update -eq 1 ]
 then
-  if ! [ -e $basedir/$config_file ]
+  if ! [ -e $basedir/$configurationFile ]
   then
-    abort "couldn't find existing configuration file '$basedir/$config_file'"
+    abort "couldn't find existing configuration file '$basedir/$configurationFile'"
   else
-    . $basedir/$config_file
+    . $basedir/$configurationFile
     echo "existing configuration used" | logo
   fi
 fi
 
-/bin/cat <<LIMIT1 > $installdir/$config_file
-#!/bin/bash
-
+/bin/cat <<LIMIT1 > $installdir/$configurationFile
 ### look and feel
 
 # utility boxes
-__suchbox="$__suchbox"
-__dekodbox="$__dekodbox"
-__whoisbox="$__whoisbox"
-__usetabs="$__usetabs"
+__suchbox="1"
+__dekodbox="1"
+__whoisbox="1"
+__usetabs="1"
 
 # skin
-__skin="$__skin"
+__skin=""
 
 # tables
-__klick="$__klick"
-__zeilen="$__zeilen"
+__klick="oncontextmenu"
+__zeilen="5 10 25"
+
+# led
+__led1="250 3750"
+__led2="250 250"
 
 # debug
 __debug="0"
@@ -943,60 +883,58 @@ __debug="0"
 ### DNS
 
 # own host name
-__dns_server_name="$__dns_server_name"
+__dns_server_name="lim"
 
 # own domain name
-__dns_domain_name="$__dns_domain_name"
+__dns_domain_name="it1"
 
 
 ### WLAN
 
 # own wifi's SSID
-__wlan_ssid="$__wlan_ssid"
+__wlan_ssid="$wifiSSID"
 
 # own wifi's password
-__wlan_password="$__wlan_password"
+__wlan_password="$wifiPassword"
 
 # own wifi's channel
-__wlan_channel="$__wlan_channel"
+__wlan_channel="$wifiChannel"
 
 
 ### network
 
-# first .. third octets
-__ip_ip1="$__ip_ip1"
-__ip_ip2="$__ip_ip2"
-__ip_ip3="$__ip_ip3"
+# first three octets
+__ip_ip1="172"
+__ip_ip2="16"
+__ip_ip3="0"
+# last octet (own address)
+__ip_ip="1"
 
 # netmask
-__ip_mask="$__ip_mask"
-
-# own address
-__ip_ip="$__ip_ip"
+__ip_mask="255.255.255.0"
 
 # DHCP range
-__ip_dhcp1="$__ip_dhcp1"
-__ip_dhcp2="$__ip_dhcp2"
+__ip_dhcp1="2"
+__ip_dhcp2="254"
 
 
 ### internet
 
 # routing
-__internet_aufzeichnung="$__internet_aufzeichnung"
+__internet_aufzeichnung="1"
 
 # ports to listen for unencrypted traffic for
-__tcp_ports="$__tcp_ports"
+__tcp_ports=""
 
 # ports to listen for encrypted traffic for
-__ssl_ports="$__ssl_ports"
+__ssl_ports="443"
 
-# list of umts providers
-__umts="$__umts"
-
+# umts provider apn
+__umts_apn=""
 LIMIT1
 
-echo "configuration file '$installdir/$config_file' is:" | logo
-/bin/cat $installdir/$config_file | logoo
+echo "configuration file '$installdir/$configurationFile' is:" | logo
+/bin/cat $installdir/$configurationFile | logoo
 
 echo "... configuration file made\\n" | log
 
@@ -1007,7 +945,7 @@ echo "... configuration file made\\n" | log
 
 echo "making constants file ..." | log
 
-/bin/cat <<LIMIT1 > $installdir/$constants_file
+/bin/cat <<LIMIT1 > $installdir/$constantsFile
 #!/bin/bash
 
 # develop mode?
@@ -1016,9 +954,12 @@ echo "making constants file ..." | log
 develop_mode=0
 
 # name
-my_name="$my_name"
+my_name="$myName"
 # version
-my_version="$my_major.$my_minor"
+my_version="$majorVersion.$minorVersion"
+# codename
+my_codename="$versionName"
+
 # names of interfaces
 wired_interface="${myname}eth"
 wireless_interface="${myname}wlan"
@@ -1030,80 +971,30 @@ temp_dir="$basedir/$tempdir"
 # data dir for database etc
 data_dir="$basedir/$datadir"
 # name of configuration file
-config_file="$config_file"
+config_file="$configurationFile"
 # name of constants file
-constants_file="$constants_file"
-
-# location of php5 cli bin
-php5_bin="/usr/bin/php5"
-# name of dbinserter script
-dbinserter="dbinserter.php"
-# name of dbinserter output file
-dbinserter_output="dbinserter.output"
-# name of dbinserter pid file
-dbinserter_pid="dbinserter.pid"
-
-# location of sslsplit binary (or link to)
-sslsplit_bin="$basedir/sslsplit"
-# name of dir to store connection logs
-connection_dir="connections"
-# name of dir to store certificates
-certificate_dir="certificates"
-# name of file for sslslpit connection log
-connection_log="connection.log"
-# name of file for sslslpit output
-sslsplit_output="sslsplit.output"
-# name of sslsplit pid file
-sslsplit_pid="sslsplit.pid"
-# proxy port for non-SSL traffic
-tcpproxy_port=65534
-# proxy port for SSL traffic
-sslproxy_port=65535
-
-# location of tcpdump binary (or link to)
-tcpdump_bin="/usr/sbin/tcpdump"
-# name of tcpdump pcap file
-tcpdump_pcap="tcpdump.pcap"
-# name of file for tcpdump output
-tcpdump_output="tcpdump.output"
-# name of tcpdump pid file
-tcpdump_pid="tcpdump.pid"
+constants_file="$constantsFile"
 
 # location of log file for start script
-logfile="$basedir/$tempdir/$my_name.log"
+logfile="$basedir/$tempdir/$myName.log"
+# location of boot flag file
+bootingfile="$basedir/$tempdir/booting"
+# location of boot result file
+bootfile="$basedir/$tempdir/boot"
+# list of errors in boot process
+errorNoSSHD=1
+errorNoNamed=2
+errorNoRouting=3
+errorNoDataDir=4
+errorNoBaseTables1=5
+errorNoMysqld1=6
+errorNoDatabase1=7
+errorMysqld=8
+errorNoMount=9
+errorNoBaseTables2=10
+errorNoMysqld2=11
+errorNoDatabase2=12
 
-# location of CA key file for SSLsplit
-key_file="$basedir/cert.key"
-# location of CA cert file for SSLsplit
-cert_file="$basedir/cert.crt"
-
-# location of config and pid files for sshd server
-sshd_configfile="$basedir/$tempdir/sshd.conf"
-sshd_pidfile="$basedir/$tempdir/sshd.pid"
-
-# location of config and db files for bind name server
-bind_configfile="$basedir/$tempdir/named.conf"
-bind_forwardfile="$basedir/$tempdir/named.forward"
-bind_reversefile="$basedir/$tempdir/named.reverse"
-
-# location of config, lease and pid files for dhcpd
-dhcpd_configfile="$basedir/$tempdir/dhcpd.conf"
-dhcpd_pidfile="$basedir/$tempdir/dhcpd.pid"
-dhcpd_leasefile="$basedir/$tempdir/dhcpd.leases"
-
-# location of lease and pid files for dhclient
-dhclient_pidfile="$basedir/$tempdir/dhclient.pid"
-dhclient_leasefile="$basedir/$tempdir/dhclient.leases"
-
-# location of config file for hostapd
-hostapd_configfile="$basedir/$tempdir/hostapd.conf"
-
-# location of config file for lighttpd
-lighttpd_configfile="$basedir/$tempdir/lighttpd.conf"
-# server root for lighttpd
-lighttpd_root="$basedir/www"
-# port for lighttpd
-lighttpd_port="80"
 # skin dir (relative to lighttpd_root)
 skin_dir="css/skin/"
 
@@ -1122,36 +1013,11 @@ database_initfile="$basedir/initialize.sql"
 # location of file containing sql commands to initialize ciphers
 ciphers_initfile="$basedir/ciphers.sql"
 # command to incorporate ciphersuite information
-ciphersuites_cmd="/usr/bin/php5 $basedir/ciphersuites.php $basedir ciphersuites.txt"
-
-# location of script to open internet connection
-online_script="$basedir/$tempdir/online.sh"
-# location of script to close internet connection
-offline_script="$basedir/$tempdir/offline.sh"
-# location of flag file indicating having been online at least once after (re)start
-online_flag="$basedir/$tempdir/online_flag"
-
-# location of config file for wvdial
-wvdial_configfile="$basedir/$tempdir/wvdial.conf"
-# location of config file for wpa_supplicant
-wpa_supplicant_configfile="$basedir/$tempdir/wpa_supplicant.conf"
-
-# location of run file for session
-session_file="$basedir/$tempdir/session.run"
-
-# location of image file for meta data extraction
-image_file="$basedir/$tempdir/image"
-
-# location of zip file for export and import
-export_file="$basedir/$datadir/archiv.zip"
-
-# name of file containing meta infos in export archive
-meta_file="meta.xml"
-
+ciphersuites_cmd="/usr/bin/php $basedir/ciphersuites.php $basedir ciphersuites.txt"
 LIMIT1
 
-echo "constants file '$installdir/$constants_file' is:" | logo
-/bin/cat $installdir/$constants_file | logoo
+echo "constants file '$installdir/$constantsFile' is:" | logo
+/bin/cat $installdir/$constantsFile | logoo
 
 echo "... constants file made\\n" | log
 

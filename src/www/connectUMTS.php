@@ -1,219 +1,204 @@
 <?php
 
-//==============================================================================
-//==============================================================================
-//
-//     PROJECT: LiMiT1
-//        FILE: connectUMTS.php
-//         SEE: https://github.com/ulkuehn/LiMiT1
-//      AUTHOR: Ulrich Kühn
-//
-//       USAGE: by web server
-//
-// DESCRIPTION: used to connect a LiMiT1 system to the internet via UMTS
-//              supports different types of UMTS sticks ans pin protection
-//
-//==============================================================================
-//==============================================================================
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
 
-require ("include/constants.php");
-require ("include/configuration.php");
-require ("include/utility.php");
+/**
+ * project LiMiT1
+ * file connectUMTS.php
+ * 
+ * connect a LiMiT1 system to the internet via UMTS
+ * supports different types of UMTS sticks and PIN protection
+ * 
+ * @author Ulrich Kühn
+ * @see https://github.com/ulkuehn/LiMiT1
+ * @copyright (c) 2017, 2018, Ulrich Kühn
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
+ */
+set_include_path ( pathinfo ( $_SERVER[ "DOCUMENT_ROOT" ] )[ "dirname" ] . "/www" );
+require_once ("include/constants.php");
+require_once ("include/configuration.php");
+require_once ("include/utility.php");
+require_once ("include/onlineOfflineUtility.php");
+require_once ("include/globalNames.php");
 
-require ("include/http.php");
-require ("include/htmlstart.php");
-require ("include/topmenu.php");
+
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
+
+include ("include/httpHeaders.php");
+include ("include/openHTML.php");
+include ("include/topMenu.php");
 
 // Beschriftungen der Eingabefelder
-$_verbinden = "Verbinden";
-$_provider = "Provider";
 $_pin = "PIN";
 
 
-titleAndHelp ("Internetverbindung per UMTS", <<<LIMIT1
-Ist ein UMTS-Stick angeschlossen, kann über diesen eine mobile Internetverbindung hergestellt werden.
-LIMIT1
-);
+titleAndHelp ( _ ( "Internetverbindung per UMTS" ),
+                   _ ( "Ist ein UMTS-Stick angeschlossen, kann über diesen eine mobile Internetverbindung hergestellt werden." ) );
 
-# umts adapter present?
-foreach (scandir("/sys/class/net") as $interface)
+/*
+ * determine if umts adapter is present and its dev file name
+ */
+foreach ( scandir ( "/sys/class/net" ) as $interface )
 {
-  if ($interface != $wired_interface && $interface != $wireless_interface)
+  if ( $interface != $wired_interface && $interface != $wireless_interface )
   {
-    unset ($udev);
-    exec ("/bin/udevadm info -q property /sys/class/net/$interface", $udev, $ret);
-    foreach ($udev as $info)
+    unset ( $udevadmOutput );
+    exec ( "/bin/udevadm info -q property /sys/class/net/$interface",
+           $udevadmOutput,
+           $udevadmReturnValue );
+    foreach ( $udevadmOutput as $udevLine )
     {
-      if ($info == "DEVTYPE=wwan" || $info == "ID_USB_DRIVER=cdc_ether")
+      if ( $udevLine == "DEVTYPE=wwan" || $udevLine == "ID_USB_DRIVER=cdc_ether" )
       {
-        $umts_interface = $interface;
-        $dial = ($info == "DEVTYPE=wwan");
-        #echo "<p>info = $info , if = $umts_interface , dial = $dial</p>";
+        $umtsInterface = $interface;
+        /*
+         * dial up type
+         */
+        $umtsDial = ($udevLine == "DEVTYPE=wwan");
       }
     }
   }
 }
 
-if ($umts_interface == "" || !file_exists ("/sys/class/net/$umts_interface"))
+/*
+ * no interface found
+ */
+if ( $umtsInterface == "" || !file_exists ( "/sys/class/net/$umtsInterface" ) )
 {
   echo "<div class=\"row\">";
-  errorMsg ("Es ist kein UMTS-Stick angeschlossen.");
+  showErrorMessage ( _ ( "Es ist kein UMTS-Stick angeschlossen." ) );
   echo "</div>";
 }
 
-else if (file_exists ($session_file))
+/*
+ * active recording
+ */
+else if ( file_exists ( $temp_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "sessionFile" ] ) )
 {
   echo "<div class=\"row\">";
-  errorMsg ("Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor die Internetverbindung von $my_name geändert werden kann.");
+  showErrorMessage ( _ ( "Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor die Internetverbindung von $my_name geändert werden kann." ) );
   echo "</div>";
 }
 
+/*
+ * umts stick connected and no recording going on
+ */
 else
 {
-  $ok = 0;
-  $pinOk = true;
-  
-  if (isset($_POST["verbinden"]))
+  $ok = false;
+  $pinIsOk = true;
+
+  if ( isset ( $_POST[ $__[ "connectUMTS" ] [ "params" ][ "connect" ] ] ) )
   {
-    $pinOk = $_POST["pin"] == "" || filter_var($_POST["pin"], FILTER_VALIDATE_INT, array("options" =>array('min_range'=>1000,'max_range'=>99999999)));
+    $pinIsOk = $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] == "" || filter_var ( $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ],
+                                                                                           FILTER_VALIDATE_INT,
+                                                                                           array (
+        "options" => array (
+          "min_range" => 1000,
+          "max_range" => 99999999 ) ) );
 
-    if ($dial && $pinOk && $_POST["provider"] != "")
+    /*
+     * dial up sticks need a dialer config
+     */
+    if ( $umtsDial && $pinIsOk && $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "apn" ] ] != "" )
     {
-      offline ();
-      
-      $wvd = fopen ($wvdial_configfile, "w");
-      fwrite ($wvd, <<<LIMIT1
-[Dialer Defaults]
-Modem Type = Analog Modem
-Baud = 460800
-New PPPD = yes
-Modem = /dev/ttyUSB0
-ISDN = 0
+      goOffline ();
 
-LIMIT1
-            );
-      if ($_POST["pin"] != "")
+      $wvdialFH = fopen ( $temp_dir . "/" . $__[ "connectUMTS" ][ "values" ][ "wvdialFile" ],
+                          "w" );
+      fwrite ( $wvdialFH,
+               "[Dialer Defaults]\nModem Type = Analog Modem\nBaud = 460800\nNew PPPD = yes\nModem = /dev/ttyUSB0\nISDN = 0\n" );
+
+      if ( $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] != "" )
       {
-        fwrite ($wvd, "[Dialer pin]\n");
-        fwrite ($wvd, "Init1 = AT+CPIN=".$_POST["pin"]."\n");
+        fwrite ( $wvdialFH,
+                 "[Dialer pin]\n" );
+        fwrite ( $wvdialFH,
+                 "Init1 = AT+CPIN=" . $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] . "\n" );
       }
-      fwrite ($wvd, <<<LIMIT1
-    [Dialer umts]
-    Carrier Check = no
-    Phone = *99***1#
-    Password = x
-    Username = x
-    Stupid Mode = 1
-    Init4 = AT^NDISDUP=1,1,{$_POST["provider"]}
-LIMIT1
-            );
-      fclose ($wvd);
-      
-      onlineScript (($_POST["pin"] != ""? "/usr/bin/wvdial --config=$wvdial_configfile pin\n" : "") .
-                    "/usr/bin/wvdial --config=$wvdial_configfile umts &\n", $umts_dial);
-                    
-      offlineScript ("/usr/bin/killall -s HUP wvdial", $umts_dial);
-      
-      online ("UMTS");
-      $ok = 1;
-    }    
-    
-    if (!$dial && $pinOk)
+      fwrite ( $wvdialFH,
+               "[Dialer umts]\nCarrier Check = no\nPhone = *99***1#\nPassword = x\nUsername = x\nStupid Mode = 1\nInit4 = AT^NDISDUP=1,1," . $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "apn" ] ] . "\n" );
+      fclose ( $wvdialFH );
+
+      writeOnlineScript ( ($_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] != "" ? "/usr/bin/wvdial --config=" . $temp_dir . "/" . $__[ "connectUMTS" ][ "values" ][ "wvdialFile" ] . " pin\n" : "") .
+        "/usr/bin/wvdial --config=" . $temp_dir . "/" . $__[ "connectUMTS" ][ "values" ][ "wvdialFile" ] . " umts &\n",
+                          $umts_dial );
+
+      writeOfflineScript ( "# " . _ ( "UMTS" ) . "\n/usr/bin/killall -s HUP wvdial",
+                                      $umts_dial );
+
+      goOnline ( _ ( "UMTS" ) );
+      $ok = true;
+    }
+
+    /*
+     * no dial up needed, just PIN
+     */
+    if ( !$umtsDial && $pinIsOk )
     {
-      offline ();
-      
-      onlineScript (<<<LIMIT1
-/sbin/ifconfig $umts_interface 192.168.0.100 netmask 255.255.255.0
-/sbin/route add default gw 192.168.0.1
+      goOffline ();
 
-LIMIT1
-                   . ($_POST["pin"] != ""? "/usr/bin/curl \"http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&goformId=ENTER_PIN&PinNumber=".$_POST["pin"]."\"\n" : "")
-                   . "/usr/bin/curl \"http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&notCallback=true&goformId=CONNECT_NETWORK\"\n"
-                   , $umts_interface);
+      writeOnlineScript ( "/sbin/ifconfig $umtsInterface 192.168.0.100 netmask 255.255.255.0\n/sbin/route add default gw 192.168.0.1\n" . ($_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] != "" ? "/usr/bin/curl \"http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&goformId=ENTER_PIN&PinNumber=" . $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ] . "\"\n" : "") . "/usr/bin/curl \"http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&notCallback=true&goformId=CONNECT_NETWORK\"\n",
+                          $umtsInterface );
 
-      offlineScript (<<<LIMIT1
-# UMTS
-/usr/bin/curl "http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&notCallback=true&goformId=DISCONNECT_NETWORK"
-/sbin/route del default gw 192.168.0.1
-/sbin/ifconfig $umts_interface 0.0.0.0
-/sbin/ifconfig $umts_interface down
+      writeOfflineScript ( "# " . _ ( "UMTS" ) . "\n/usr/bin/curl \"http://192.168.0.1/goform/goform_set_cmd_process?isTest=false&notCallback=true&goformId=DISCONNECT_NETWORK\"\n/sbin/route del default gw 192.168.0.1\n/sbin/ifconfig $umtsInterface 0.0.0.0\n/sbin/ifconfig $umtsInterface down\n",
+                                      $umtsInterface );
 
-LIMIT1
-                    , $umts_interface);
-                    
-      online ("UMTS");
-      $ok = 1;
+      goOnline ( _ ( "UMTS" ) );
+      $ok = true;
     }
   }
 
-  if (!$ok)
+  /*
+   * either no request or errors in request 
+   */
+  if ( !$ok )
   {
-    echo <<<LIMIT1
-    <form class="form-horizontal" method="post">
-      <div class="row">
-LIMIT1;
+    echo "<form class=\"form-horizontal\" method=\"post\"><div class=\"row\">";
 
-    if (is_readable($offline_script))
+    /*
+     * warn if internet connection exists
+     */
+    if ( is_readable ( $temp_dir . "/" . $__[ "include/onlineOfflineUtility" ] [ "values" ] [ "offlineScript" ] ) )
     {
-      $cfile = fopen ($offline_script, "r");
-      $line = fgets ($cfile); 
-      fclose ($cfile);
-      $internet = trim (substr ($line, 1));
-      alertMsg ("$my_name ist bereits per $internet mit dem Internet verbunden. Diese bestehende Verbindung wird beendet, bevor eine Internetverbindung per UMTS hergestellt wird.");
+      $offlineFH = fopen ( $temp_dir . "/" . $__[ "include/onlineOfflineUtility" ] [ "values" ] [ "offlineScript" ],
+                           "r" );
+      $line = fgets ( $offlineFH );
+      fclose ( $offlineFH );
+      $internet = trim ( substr ( $line,
+                                  1 ) );
+      showAlertMessage ( _ ( "$my_name ist bereits per $internet mit dem Internet verbunden. Diese bestehende Verbindung wird beendet, bevor eine Internetverbindung per UMTS hergestellt wird." ) );
     }
 
-    echo <<<LIMIT1
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            <h4 class="panel-title">Eigenschaften</h4>
-          </div>
-          <div class="panel-body">
-LIMIT1;
+    echo "<div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "Eigenschaften" ), "</h4></div><div class=\"panel-body\">";
 
-    if ($dial)
+    /*
+     * dial up sticks need apn setting
+     */
+    if ( $umtsDial )
     {
-      echo <<<LIMIT1
-            <div class="form-group">
-              <label for="provider" class="col-sm-3 col-md-2 col-lg-1 control-label">Provider</label>
-              <div class="col-sm-9 col-md-10 col-lg-11">
-                <select class="form-control" name="provider">
-LIMIT1;
-      foreach (explode (";", $__umts) as $provider)
-      {
-        $pf = explode (":", $provider);
-        echo "<option value=\"",$pf[1],"\"",($_POST["provider"]==$pf[1]? " selected":""),">",$pf[0],"</option>";
-      }
-      echo "</select></div></div>";
+      echo "<div class=\"form-group\"><label for=\"", $__[ "connectUMTS" ] [ "params" ] [ "apn" ], "\" class=\"col-sm-3 col-md-2 col-lg-1 control-label\">", _ ( "APN" ), "</label><div class=\"col-sm-9 col-md-10 col-lg-11\"><input type=\"text\" class=\"form-control\" id=\"", $__[ "connectUMTS" ] [ "params" ] [ "apn" ], "\" name=\"", $__[ "connectUMTS" ] [ "params" ] [ "apn" ], "\" value=\"$__umts_apn\"><span class=\"help-block\">", $__umts_apn != "" ? _ ( "Wert aus den Einstellungen wurde übernommen, kann aber überschrieben werden." ) : _ ( "z.B.internet.t-mobile, web.vodafone.de, pinternet.interkom.de" ), "</span></div></div>";
     }
-  
-    echo <<<LIMIT1
-            <div class="form-group">
-              <label for="pin" class="col-sm-3 col-md-2 col-lg-1 control-label">PIN</label>
-              <div class="col-sm-9 col-md-10 col-lg-11">
-                <div class="input-group">
-                  <input type="password" class="form-control" name="pin" id="pin" value="{$_POST["pin"]}">
-                  <span class="input-group-btn">
-                    <span class="btn btn-default" onmouseover="document.getElementById('pin').type='text';" onmouseout="document.getElementById('pin').type='password';"><i class="fa fa-eye"></i></span>
-                  </span>
-                </div>
-                <span class="help-block">Optional. Vier- bis achtstelliger numerischer Code.</span>
-              </div>
-            </div>
-LIMIT1;
-    if (!$pinOk)
+
+    /*
+     * PIN is needed for all sticks
+     */
+    echo "<div class=\"form-group\"><label for=\"", $__[ "connectUMTS" ] [ "params" ] [ "pin" ], "\" class=\"col-sm-3 col-md-2 col-lg-1 control-label\">", $__[ "connectUMTS" ] [ "values" ][ "pin" ], "</label><div class=\"col-sm-9 col-md-10 col-lg-11\"><div class=\"input-group\"><input type=\"password\" class=\"form-control\" name=\"", $__[ "connectUMTS" ] [ "params" ] [ "pin" ], "\" id=\"", $__[ "connectUMTS" ] [ "params" ] [ "pin" ], "\" value=\"", $_POST[ $__[ "connectUMTS" ] [ "params" ] [ "pin" ] ], "\"><span class=\"input-group-btn\"><span class=\"btn btn-default\" onmouseover=\"document.getElementById('", $__[ "connectUMTS" ] [ "params" ] [ "pin" ], "').type='text';\" onmouseout=\"document.getElementById('", $__[ "connectUMTS" ] [ "params" ] [ "pin" ], "').type='password';\"><i class=\"fa fa-eye\"></i></span></span></div><span class=\"help-block\">", _ ( "Optional. Vier- bis achtstelliger numerischer Code." ), "</span></div></div>";
+    if ( !$pinIsOk )
     {
-      echo errorMsg ("$_pin: Der angegebene Wert ist nicht gültig");
+      echo showErrorMessage ( $__[ "connectUMTS" ] [ "values" ][ "pin" ] . ": " . _ ( "Der angegebene Wert ist nicht gültig" ) );
     }
-    echo <<<LIMIT1
-            <input type="submit" class="btn btn-primary" value="$_verbinden" name="verbinden">
-          </div>
-        </div>
-      </div>
-    </form>
-LIMIT1;
+
+    echo "<input type=\"submit\" class=\"btn btn-primary\" value=\"", _ ( "Verbinden" ), "\" name=\"", $__[ "connectUMTS" ] [ "params" ][ "connect" ], "\"></div></div></div></form>";
   }
 }
 
-require ("include/htmlend.php");
-
-?>
+require ("include/closeHTML.php");

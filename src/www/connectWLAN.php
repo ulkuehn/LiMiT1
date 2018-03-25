@@ -1,244 +1,184 @@
 <?php
 
-//==============================================================================
-//==============================================================================
-//
-//     PROJECT: LiMiT1
-//        FILE: connectWLAN.php
-//         SEE: https://github.com/ulkuehn/LiMiT1
-//      AUTHOR: Ulrich Kühn
-//
-//       USAGE: by web server
-//
-// DESCRIPTION: used to connect a LiMiT1 system to a wifi network
-//              supports manual ssid specification and scanning of 
-//              visible networks 
-//
-//==============================================================================
-//==============================================================================
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
 
-require ("include/constants.php");
-require ("include/configuration.php");
-require ("include/utility.php");
+/**
+ * project LiMiT1
+ * file connectWLAN.php
+ * 
+ * connect a LiMiT1 system to a wifi network
+ * supports manual ssid specification and scanning of visible networks 
+ * 
+ * @author Ulrich Kühn
+ * @see https://github.com/ulkuehn/LiMiT1
+ * @copyright (c) 2017, 2018, Ulrich Kühn
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
+ */
+set_include_path ( pathinfo ( $_SERVER[ "DOCUMENT_ROOT" ] )[ "dirname" ] . "/www" );
+require_once ("include/constants.php");
+require_once ("include/configuration.php");
+require_once ("include/utility.php");
+require_once ("include/onlineOfflineUtility.php");
+require_once ("include/globalNames.php");
 
-require ("include/http.php");
-require ("include/htmlstart.php");
-require ("include/topmenu.php");
+
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
+
+include ("include/httpHeaders.php");
+include ("include/openHTML.php");
+include ("include/topMenu.php");
 
 // Beschriftungen der Eingabefelder
 $_ssid = "SSID";
 $_pass = "Passwort";
-$_verbinden = "Verbinden";
 
 
-titleAndHelp ("Internetverbindung per WLAN", <<<LIMIT1
-Ist ein (weiterer) WLAN-Adapter vorhanden, kann die Internetverbindung über ein Funknetzwerk hergestellt werden.
-<br>
-Es kann sowohl ein erkanntes WLAN ausgewählt als auch eine SSID manuell angegeben werden.
-LIMIT1
-);
+titleAndHelp ( _ ( "Internetverbindung per WLAN" ),
+                   _ ( "Ist ein (weiterer) WLAN-Adapter vorhanden, kann die Internetverbindung über ein Funknetzwerk hergestellt werden.<br>Es kann sowohl ein erkanntes WLAN ausgewählt als auch eine SSID manuell angegeben werden." ) );
 
-# wifi adapter present?
-foreach (scandir("/sys/class/net") as $interface)
+/*
+ * check if wifi adapter present
+ */
+foreach ( scandir ( "/sys/class/net" ) as $interface )
 {
-  if ($interface != $wired_interface && $interface != $wireless_interface)
+  if ( $interface != $wired_interface && $interface != $wireless_interface )
   {
-    unset ($udev);
-    exec ("/bin/udevadm info -q property /sys/class/net/$interface", $udev, $ret);
-    foreach ($udev as $info)
+    unset ( $udev );
+    exec ( "/bin/udevadm info -q property /sys/class/net/$interface",
+           $udev,
+           $ret );
+    foreach ( $udev as $info )
     {
-      if ($info == "DEVTYPE=wlan")
+      if ( $info == "DEVTYPE=wlan" )
       {
         $wireless_internet = $interface;
       }
     }
   }
 }
-  
-if ($wireless_internet == "")
+
+/*
+ * no wifi adapter
+ */
+if ( $wireless_internet == "" )
 {
   echo "<div class=\"row\">";
-  errorMsg ("Es ist kein WLAN-Stick angeschlossen.");
+  showErrorMessage ( _ ( "Es ist kein WLAN-Stick angeschlossen." ) );
   echo "</div>";
 }
 
-else if (file_exists ($session_file))
+/*
+ * wifi adapter found
+ */
+else if ( file_exists ( $temp_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "sessionFile" ] ) )
 {
   echo "<div class=\"row\">";
-  errorMsg ("Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor die Internetverbindung von $my_name geändert werden kann.");
+  showErrorMessage ( _ ( "Im Moment läuft eine Aufzeichnung. Diese muss beendet werden, bevor die Internetverbindung von $my_name geändert werden kann." ) );
   echo "</div>";
 }
-
 else
 {
-  if (isset($_POST["verbinden"]))
+  /*
+   * connect to wifi
+   */
+  if ( isset ( $_POST[ $__[ "connectWLAN" ][ "params" ][ "connect" ] ] ) )
   {
-    $connectTo = isset($_POST["hssid"]) && $_POST["hssid"] != ""? $_POST["hssid"] : $_POST["ssid"];
-    $pass = $_POST["pass"];
+    $connectTo = isset ( $_POST[ $__[ "connectWLAN" ][ "params" ][ "autoSSID" ] ] ) && $_POST[ $__[ "connectWLAN" ][ "params" ][ "autoSSID" ] ] != "" ? $_POST[ $__[ "connectWLAN" ][ "params" ][ "autoSSID" ] ] : $_POST[ $__[ "connectWLAN" ][ "params" ][ "manualSSID" ] ];
+    $wlanPassword = $_POST[ $__[ "connectWLAN" ][ "params" ][ "password" ] ];
 
-    if ($connectTo != "")
+    if ( $connectTo != "" )
     {
-      offline ();
+      goOffline ();
 
-      onlineScript (<<<LIMIT1
-/usr/bin/killall dhclient
-/bin/rm $dhclient_pidfile
-/bin/rm $dhclient_leasefile
+      writeOnlineScript ( "/usr/bin/killall dhclient\n/bin/rm $dhclient_pidfile\n/bin/rm $dhclient_leasefile\n" . ($wlanPassword == "" ? "/sbin/iwconfig $wireless_internet essid \"$connectTo\"" : "/usr/bin/killall wpa_supplicant\n/sbin/wpa_supplicant -B -D nl80211 -i $wireless_internet -c " . $temp_dir . "/" . $__[ "connectWLAN" ][ "values" ][ "wpaSupplicantFile" ]) . "\n/sbin/dhclient -v -pf $dhclient_pidfile -lf $dhclient_leasefile $wireless_internet\n",
+                          $wireless_internet );
 
-LIMIT1
-                    . ($pass == ""? "/sbin/iwconfig $wireless_internet essid \"$connectTo\"" : "/usr/bin/killall wpa_supplicant\n/sbin/wpa_supplicant -B -D nl80211 -i $wireless_internet -c $wpa_supplicant_configfile")
-                    . "\n/sbin/dhclient -v -pf $dhclient_pidfile -lf $dhclient_leasefile $wireless_internet"
-                    , $wireless_internet );
-              
-      if ($pass != "")
+      if ( $wlanPassword != "" )
       {
-        $wpasup = fopen ($wpa_supplicant_configfile, "w");
-        fwrite ($wpasup, <<<LIMIT1
-ctrl_interface=/var/run/wpa_supplicant
-ctrl_interface_group=0
-
-LIMIT1
-                );
-        exec ("/usr/bin/wpa_passphrase \"$connectTo\" \"$pass\"", $lines, $erg);
-        if ($erg == 0)
+        $wpaConfigFileFH = fopen ( $temp_dir . "/" . $__[ "connectWLAN" ][ "values" ][ "wpaSupplicantFile" ],
+                                   "w" );
+        fwrite ( $wpaConfigFileFH,
+                 "ctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\n" );
+        exec ( "/usr/bin/wpa_passphrase \"$connectTo\" \"$wlanPassword\"",
+               $lines,
+               $returnValue );
+        if ( $returnValue == 0 )
         {
-          foreach ($lines as $line)
+          foreach ( $lines as $line )
           {
-            fwrite ($wpasup, "$line\n");
+            fwrite ( $wpaConfigFileFH,
+                     "$line\n" );
           }
         }
-        fclose ($wpasup);
+        fclose ( $wpaConfigFileFH );
       }
-      
-      offlineScript (<<<LIMIT1
-# WLAN ($connectTo)
-# $wireless_internet
-/usr/bin/killall wpa_supplicant
-/sbin/ifconfig $wireless_internet 0.0.0.0
 
-LIMIT1
-                    , $wireless_internet );
-      
-      online ("WLAN");
+      writeOfflineScript ( "# " . _ ( "WLAN" ) . " ($connectTo)\n# $wireless_internet\n/usr/bin/killall wpa_supplicant\n/sbin/ifconfig $wireless_internet 0.0.0.0\n",
+                                      $wireless_internet );
+
+      goOnline ( _ ( "WLAN" ) );
     }
   }
 
-  if ($connectTo == "")
+  /*
+   * show form (
+   */
+  if ( !isset ( $_POST[ $__[ "connectWLAN" ][ "params" ][ "connect" ] ] ) || $connectTo == "" )
   {
-    echo <<<LIMIT1
-    <form class="form-horizontal" method="post">
-      <input type="hidden" id="hssid" name="hssid" value="">
-      <div class="row">
-LIMIT1;
+    echo "<form class=\"form-horizontal\" method=\"post\"><input type=\"hidden\" id=\"", $__[ "connectWLAN" ][ "ids" ][ "autoSSID" ], "\" name=\"", $__[ "connectWLAN" ][ "params" ][ "autoSSID" ], "\" value=\"\"><div class=\"row\">";
 
-    if (is_readable($offline_script))
+    if ( is_readable ( $temp_dir . "/" . $__[ "include/onlineOfflineUtility" ] [ "values" ] [ "offlineScript" ] ) )
     {
-      $cfile = fopen ($offline_script, "r");
-      $line = fgets ($cfile); 
-      fclose ($cfile);
-      $internet = trim (substr ($line, 1));
-      alertMsg ("$my_name ist bereits per $internet mit dem Internet verbunden. Diese bestehende Verbindung wird beendet, bevor eine Internetverbindung per WLAN hergestellt wird.");
-    }
-    
-    echo <<<LIMIT1
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            <h4 class="panel-title">SSID manuell angeben</h4>
-          </div>
-          <div class="panel-body">
-            <div class="form-group">
-              <label for="ssid" class="control-label col-sm-2 col-md-2 col-lg-1">$_ssid</label>
-              <div class="col-sm-6 col-md-7 col-lg-9">
-                <input type="text" class="form-control" name="ssid" id="ssid" value="{$_POST["ssid"]}">
-              </div>
-LIMIT1;
-
-    if (isset($_POST["verbinden"]) && isset($_POST["hssid"]) && $_POST["hssid"] == "" && isset($_POST["ssid"]) && $_POST["ssid"] == "")
-    {
-      errorMsg ("$_ssid: Bitte einen Wert eingeben");
+      $offlineFH = fopen ( $temp_dir . "/" . $__[ "include/onlineOfflineUtility" ] [ "values" ] [ "offlineScript" ],
+                           "r" );
+      $line = fgets ( $offlineFH );
+      fclose ( $offlineFH );
+      $internet = trim ( substr ( $line,
+                                  1 ) );
+      showAlertMessage ( _ ( "$my_name ist bereits per $internet mit dem Internet verbunden. Diese bestehende Verbindung wird beendet, bevor eine Internetverbindung per WLAN hergestellt wird." ) );
     }
 
-    echo <<<LIMIT1
-              <div class="col-sm-4 col-md-3 col-lg-2">
-                <button class="btn btn-sm btn-success" type="submit" value="$_verbinden" name="verbinden" title="mit offenem WLAN verbinden"><i class="fa fa-lg fa-unlock"></i></button>
-                <a class="btn btn-sm btn-danger" href="#passwordModal" data-toggle="modal" onclick="document.getElementById('pass').value=''; document.getElementById('wifiname').innerHTML=document.getElementById('ssid').value;" title="Passwort eingeben und mit verschlüsseltem WLAN verbinden"><i class="fa fa-lg fa-lock"></i></a>
-              </div>
-            </div>
-          </div>
-        </div>
+    /*
+     * manual ssid
+     */
+    echo "<div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "SSID manuell angeben" ), "</h4></div><div class=\"panel-body\">";
+    /*
+     * no ssid given
+     */
+    if ( isset ( $_POST[ $__[ "connectWLAN" ][ "params" ][ "connect" ] ] ) )
+    {
+      showErrorMessage ( _ ( "SSID: Bitte einen Wert eingeben" ) );
+    }
+    echo "<div class=\"form-group\"><label for=\"", $__[ "connectWLAN" ][ "params" ][ "manualSSID" ], "\" class=\"control-label col-sm-2 col-md-2 col-lg-1\">", _ ( "SSID" ), "</label><div class=\"col-sm-6 col-md-7 col-lg-9\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "connectWLAN" ][ "params" ][ "manualSSID" ], "\" id=\"", $__[ "connectWLAN" ][ "params" ][ "manualSSID" ], "\" value=\"", $_POST[ $__[ "connectWLAN" ][ "params" ][ "manualSSID" ] ], "\"></div>";
+    /*
+     * connect to open wifi
+     */
+    echo "<div class=\"col-sm-4 col-md-3 col-lg-2\"><button class=\"btn btn-sm btn-success\" type=\"submit\" value=\"", $__[ "connectWLAN" ][ "values" ][ "connect" ], "\" name=\"", $__[ "connectWLAN" ][ "params" ][ "connect" ], "\" title=\"", _ ( "mit offenem WLAN verbinden" ), "\"><i class=\"fa fa-lg fa-unlock\"></i></button>";
+    /*
+     * connect to enycrpyted wifi
+     */
+    echo "<a class=\"btn btn-sm btn-danger\" href=\"#", $__[ "connectWLAN" ][ "ids" ][ "passwordModal" ], "\" data-toggle=\"modal\" onclick=\"document.getElementById('", $__[ "connectWLAN" ][ "ids" ][ "password" ], "').value=''; document.getElementById('", $__[ "connectWLAN" ][ "ids" ] [ "wifiName" ], "').innerHTML=document.getElementById('", $__[ "connectWLAN" ][ "params" ][ "manualSSID" ], "').value;\" title=\"", _ ( "Passwort eingeben und mit verschlüsseltem WLAN verbinden" ), "\"><i class=\"fa fa-lg fa-lock\"></i></a></div></div></div>";
 
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            <h4 class="panel-title">Erkannte WLAN</h4>
-          </div>
-          <div class="panel-body">
-            <script>
-              function wifi()
-              {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.onreadystatechange = function() 
-                {
-                  if (xmlhttp.readyState==4 && xmlhttp.status==200) 
-                  {
-                    document.getElementById("wifi").innerHTML = xmlhttp.responseText;
-                  }
-                }
-                
-                var d = new Date();
-                var unixtime = Math.floor(d.getTime() / 1000);
-                xmlhttp.open("GET","include/wifi.php?ts="+unixtime,true);
-                xmlhttp.send();
-              }
+    /*
+     * display wifi networks within reach
+     */
+    echo "<div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "Erkannte WLAN" ), "</h4></div><div class=\"panel-body\"><script> function scanWifi() { var xmlhttp = new XMLHttpRequest(); xmlhttp.onreadystatechange = function() { if (xmlhttp.readyState==4 && xmlhttp.status==200) { document.getElementById(\"", $__[ "connectWLAN" ] [ "ids" ] [ "wifis" ], "\").innerHTML = xmlhttp.responseText; } }; xmlhttp.open(\"GET\",\"include/scanWifi.php\",true); xmlhttp.send(); } scanWifi(); setInterval (function () { scanWifi() }, 2000); </script><div id=\"", $__[ "connectWLAN" ] [ "ids" ] [ "wifis" ], "\">", showInfoMessage ( _ ( "Die Funknetze in der Umgebung werden erkannt ..." ) ), "</div></div></div>";
 
-              wifi();
-              setInterval (function () {wifi()}, 2000);            
-            </script>
-            <div id="wifi">
-LIMIT1;
-    echo infoMsg ("Die Funknetze in der Umgebung werden erkannt ...");
-    echo <<<LIMIT1
-            </div>
-          </div>
-        </div>
-
-        <div class="modal fade" id="passwordModal" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <div class="alert alert-info" role="alert">
-                  <div class="msgIcon"><i class="fa fa-lock fa-2x"></i></div>
-                  <div class="msgText"><strong>Authentifizierung für WLAN "<span id="wifiname"></span>"</strong></div>
-                </div>
-              </div>
-              <div class="modal-body">
-                <div class="form-group">
-                  <div class="col-md-2">
-                    <label for="pass" class="control-label">$_pass</label>
-                  </div>
-                  <div class="col-md-10">
-                    <div class="input-group">
-                      <input type="password" class="form-control" name="pass" id="pass" value="">
-                      <span class="input-group-btn">
-                        <span class="btn btn-default" onmouseover="document.getElementById('pass').type='text';" onmouseout="document.getElementById('pass').type='password';"><i class="fa fa-eye"></i></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>             
-              </div>
-              <div class="modal-footer">
-                <input class="btn btn-primary" type="submit" value="$_verbinden" name="verbinden">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-
-LIMIT1;
+    /*
+     * modal to enter password for encrypted wifis
+     */
+    echo "<div class=\"modal fade\" id=\"", $__[ "connectWLAN" ][ "ids" ][ "passwordModal" ], "\" tabindex=\"-1\" role=\"dialog\"><div class=\"modal-dialog modal-lg\" role=\"document\"><div class=\"modal-content\"><div class=\"modal-header\"><div class=\"alert alert-info\" role=\"alert\"><div class=\"msgIcon\"><i class=\"fa fa-lock fa-2x\"></i></div><div class=\"msgText\"><strong>", _ ( "Authentifizierung für WLAN" ), " \"<span id=\"", $__[ "connectWLAN" ][ "ids" ] [ "wifiName" ], "\"></span>\"</strong></div>";
+    echo "</div></div><div class=\"modal-body\"><div class=\"form-group\"><div class=\"col-md-2\"><label for=\"", $__[ "connectWLAN" ][ "ids" ][ "password" ], "\" class=\"control-label\">", _ ( "Passwort" ), "</label></div><div class=\"col-md-10\"><div class=\"input-group\"><input type=\"password\" class=\"form-control\" name=\"", $__[ "connectWLAN" ][ "params" ][ "password" ], "\" id=\"", $__[ "connectWLAN" ][ "ids" ][ "password" ], "\" value=\"\"><span class=\"input-group-btn\"><span class=\"btn btn-default\" onmouseover=\"document.getElementById('", $__[ "connectWLAN" ][ "ids" ][ "password" ], "').type='text';\" onmouseout=\"document.getElementById('", $__[ "connectWLAN" ][ "ids" ][ "password" ], "').type='password';\"><i class=\"fa fa-eye\"></i></span>";
+    echo "</span></div></div></div></div><div class=\"modal-footer\"><input class=\"btn btn-primary\" type=\"submit\" value=\"", $__[ "connectWLAN" ][ "values" ][ "connect" ], "\" name=\"", $__[ "connectWLAN" ][ "params" ][ "connect" ], "\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">", _ ( "Abbrechen" ), "</button></div></div></div></div></div></form>";
   }
 }
 
-require ("include/htmlend.php");
-
-?>
+include ("include/closeHTML.php");

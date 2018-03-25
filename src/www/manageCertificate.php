@@ -15,30 +15,18 @@
  * 
  * @author Ulrich Kühn
  * @see https://github.com/ulkuehn/LiMiT1
- * @copyright (c) 2017, Ulrich Kühn
+ * @copyright (c) 2017, 2018, Ulrich Kühn
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
  */
 require_once ("include/constants.php");
 require_once ("include/configuration.php");
 require_once ("include/utility.php");
-require_once ("include/database.php");
+require_once ("include/connectDB.php");
 
-include ("include/http.php");
-include ("include/htmlstart.php");
-include ("include/topmenu.php");
+include ("include/httpHeaders.php");
+include ("include/openHTML.php");
+include ("include/topMenu.php");
 
-
-$createCertificateButtonText = _ ( "Zertifikat erzeugen" );
-$createCertificateID = "createCertificate";
-$certificateFields = [
-    "country"      => "C",
-    "state"        => "ST",
-    "location"     => "L",
-    "organization" => "O",
-    "unit"         => "OU",
-    "commonName"   => "CN"
-];
-$certificateDays = "days";
 
 /* ===========================================================================
  * 
@@ -58,7 +46,7 @@ function certificateField ( $fieldID,
                             $fieldText,
                             $placeHolder )
 {
-  global $createCertificateID;
+  global $__;
 
   $fieldValue = array_key_exists ( $fieldID,
                                    $_REQUEST ) ? $_REQUEST[ $fieldID ] : "";
@@ -67,11 +55,11 @@ function certificateField ( $fieldID,
   echo "<div class=\"form-group\"><label for=\"$fieldID\" class=\"col-md-3 control-label\">$fieldText</label>";
   echo "<div class=\"col-md-9\"><input type=\"text\" class=\"form-control\" name=\"$fieldID\" id=\"$fieldID\" placeholder=\"$placeHolder\" value=\"$showValue\"></div></div>";
 
-  if ( array_key_exists ( $createCertificateID,
+  if ( array_key_exists ( $__[ "manageCertificate" ][ "params" ] [ "create" ],
                           $_REQUEST ) && $fieldValue != "" && preg_match ( "/=|\//",
                                                                            $fieldValue ) )
   {
-    errorMsg ( _ ( "\"$showValue\" ist kein gültiger Wert für $fieldText (Zeichen \"=\" und \"/\" sind nicht erlaubt)" ) );
+    showErrorMessage ( _ ( "\"$showValue\" ist kein gültiger Wert für $fieldText (Zeichen \"=\" und \"/\" sind nicht erlaubt)" ) );
     return 1;
   }
 
@@ -95,59 +83,59 @@ titleAndHelp ( "Zertifikatsverwaltung",
 $errors = 0;
 echo "<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-heading\" role=\"tab\"><h4 class=\"panel-title\">", _ ( "Neues Zertifikat erzeugen" ), "</h4></div><div class=\"panel-body\"><form class=\"form-horizontal\" method=\"post\">";
 
-$errors += certificateField ( $certificateFields[ "country" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ] [ "country" ],
                               _ ( "Länderkennung" ),
                                   _ ( "z.B. DE" ) );
 /*
  * country value needs extra check
  */
-if ( array_key_exists ( $createCertificateID,
-                        $_REQUEST ) && $_REQUEST[ $certificateFields[ "country" ] ] != "" && !preg_match ( "/^[a-z]{2}$/i",
-                                                                                                           $_REQUEST[ $certificateFields[ "country" ] ] ) )
+if ( array_key_exists ( $__[ "manageCertificate" ][ "params" ] [ "create" ],
+                        $_REQUEST ) && $_REQUEST[ $__[ "manageCertificate" ] [ "values" ][ "country" ] ] != "" && !preg_match ( "/^[a-z]{2}$/i",
+                                                                                                                                $_REQUEST[ $__[ "manageCertificate" ] [ "values" ][ "country" ] ] ) )
 {
-  errorMsg ( "\"" . htmlspecialchars ( $_REQUEST[ $certificateFields[ "country" ] ] ) . "\" " . _ ( "ist kein gültiger Wert für die Länderkennung" ) );
+  showErrorMessage ( "\"" . htmlspecialchars ( $_REQUEST[ $__[ "manageCertificate" ] [ "values" ][ "country" ] ] ) . "\" " . _ ( "ist kein gültiger Wert für die Länderkennung" ) );
   $errors++;
 }
 
-$errors += certificateField ( $certificateFields[ "state" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ][ "state" ],
                               _ ( "Staat oder Region" ),
                                   _ ( "z.B. Hamburg" ) );
 
-$errors += certificateField ( $certificateFields[ "location" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ][ "location" ],
                               _ ( "Stadt" ),
                                   _ ( "z.B. St. Pauli" ) );
 
-$errors += certificateField ( $certificateFields[ "organisation" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ][ "organisation" ],
                               _ ( "Organisation" ),
                                   _ ( "z.B. $my_name" ) );
 
-$errors += certificateField ( $certificateFields[ "unit" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ][ "unit" ],
                               _ ( "Organisationseinheit" ),
                                   _ ( "z.B. $__dns_server_name.$__dns_domain_name" ) );
 
-$errors += certificateField ( $certificateFields[ "commonName" ],
+$errors += certificateField ( $__[ "manageCertificate" ] [ "values" ][ "commonName" ],
                               _ ( "Name" ),
                                   _ ( "z.B. $my_name" ) );
 
-$daysValid = array_key_exists ( $certificateDays,
-                                $_REQUEST ) ? $_REQUEST[ $certificateDays ] : "";
-echo "<div class = \"form-group\"><label for=\"$certificateDays\" class=\"col-md-3 control-label\">", _ ( "Gültigkeitsdauer in Tagen" ), "</label>";
-echo "<div class=\"col-md-9\"><input type=\"number\" class=\"form-control\" name=\"$certificateDays\" id=\"$certificateDays\" value=\"$daysValid\"></div></div>";
-if ( array_key_exists ( $createCertificateID,
+$daysValid = array_key_exists ( $__[ "manageCertificate" ][ "params" ] [ "days" ],
+                                $_REQUEST ) ? $_REQUEST[ $__[ "manageCertificate" ][ "params" ] [ "days" ] ] : "";
+echo "<div class = \"form-group\"><label for=\"", $__[ "manageCertificate" ][ "params" ] [ "days" ], "\" class=\"col-md-3 control-label\">", _ ( "Gültigkeitsdauer in Tagen" ), "</label>";
+echo "<div class=\"col-md-9\"><input type=\"number\" class=\"form-control\" name=\"", $__[ "manageCertificate" ][ "params" ] [ "days" ], "\" id=\"", $__[ "manageCertificate" ][ "params" ] [ "days" ], "\" value=\"$daysValid\"></div></div>";
+if ( array_key_exists ( $__[ "manageCertificate" ][ "params" ] [ "create" ],
                         $_REQUEST ) && (!preg_match ( "/^[0-9]+$/",
                                                       $daysValid ) || $daysValid < 1 || $daysValid > 999999) )
 {
-  errorMsg ( "\"" . $daysValid . "\" " . _ ( "ist kein gültiger Wert für die Gültigkeitsdauer" ) );
+  showErrorMessage ( "\"" . $daysValid . "\" " . _ ( "ist kein gültiger Wert für die Gültigkeitsdauer" ) );
   $errors++;
 }
 
-echo "<input type=\"submit\" class=\"btn btn-primary\" value=\"$createCertificateButtonText\" name=\"$createCertificateID\"></form></div></div></div>";
+echo "<input type=\"submit\" class=\"btn btn-primary\" value=\"", _ ( "Zertifikat erzeugen" ), "\" name=\"", $__[ "manageCertificate" ][ "params" ] [ "create" ], "\"></form></div></div></div>";
 
-if ( array_key_exists ( $createCertificateID,
+if ( array_key_exists ( $__[ "manageCertificate" ][ "params" ] [ "create" ],
                         $_REQUEST ) && !$errors )
 {
   $subject = "/";
-  foreach ( $certificateFields as $fieldName => $fieldID )
+  foreach ( $__[ "manageCertificate" ] [ "values" ] as $fieldName => $fieldID )
   {
     if ( $_REQUEST[ $fieldID ] != "" )
     {
@@ -156,7 +144,7 @@ if ( array_key_exists ( $createCertificateID,
   }
 
   // cd to /tmp first, so that .rnd file is not written to directory where script lies
-  exec ( "cd /tmp; /usr/bin/openssl req -x509 -rand /dev/urandom -nodes -newkey rsa:2048 -keyout $key_file -out $cert_file -days $daysValid -subj \"$subject\"" );
+  exec ( "cd /tmp; /usr/bin/openssl req -x509 -rand /dev/urandom -nodes -newkey rsa:2048 -keyout $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "keyFile" ] . " -out $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -days $daysValid -subj \"$subject\"" );
 }
 
 
@@ -166,10 +154,10 @@ if ( array_key_exists ( $createCertificateID,
 
 echo "<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-heading\" role=\"tab\"><h4 class=\"panel-title\">", _ ( "Vorhandendes Zertifikat" ), "</h4></div><div class=\"panel-body\">";
 
-if ( file_exists ( $cert_file ) )
+if ( file_exists ( $base_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] ) )
 {
   $serial = trim ( explode ( "=",
-                             exec ( "/usr/bin/openssl x509 -in $cert_file -noout -serial" ),
+                             exec ( "/usr/bin/openssl x509 -in $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -noout -serial" ),
                                     2 )[ 1 ] );
   /*
    * insert colons for better readability
@@ -181,22 +169,22 @@ if ( file_exists ( $cert_file ) )
                                    PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE ) );
 
   $issuer = trim ( explode ( "=",
-                             exec ( "/usr/bin/openssl x509 -in $cert_file -noout -issuer" ),
+                             exec ( "/usr/bin/openssl x509 -in $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -noout -issuer" ),
                                     2 )[ 1 ] );
   $subject = trim ( explode ( "=",
-                              exec ( "/usr/bin/openssl x509 -in $cert_file -noout -subject" ),
+                              exec ( "/usr/bin/openssl x509 -in $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -noout -subject" ),
                                      2 )[ 1 ] );
   $notbefore = trim ( explode ( "=",
-                                exec ( "/usr/bin/openssl x509 -in $cert_file -noout -startdate" ),
+                                exec ( "/usr/bin/openssl x509 -in $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -noout -startdate" ),
                                        2 )[ 1 ] );
   $notafter = trim ( explode ( "=",
-                               exec ( "/usr/bin/openssl x509 -in $cert_file -noout -enddate" ),
+                               exec ( "/usr/bin/openssl x509 -in $base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] . " -noout -enddate" ),
                                       2 )[ 1 ] );
 
   echo "<div class=\"table-responsive\"><table class=\"table table-hover\"><thead><tr><th>", _ ( "Feld" ), "</th><th>", _ ( "Wert" ), "</th></tr></thead><tbody>";
 
   echo "<tr><td>", _ ( "Erzeugt" ), "</td><td>", date ( "d.m.Y, H:i:s",
-                                                        filemtime ( $cert_file ) ), "</td></tr>";
+                                                        filemtime ( "$base_dir/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] ) ), "</td></tr>";
   echo "<tr><td>", _ ( "Seriennummer" ), "</td><td>$serial</td></tr>";
   echo "<tr><td>", _ ( "Aussteller" ), "</td><td>$issuer</td></tr>";
   echo "<tr><td>", _ ( "Inhaber" ), "</td><td>$subject</td></tr>";
@@ -204,15 +192,15 @@ if ( file_exists ( $cert_file ) )
                                  $notbefore );
   $na = date_parse_from_format ( "F d G:i:s Y e",
                                  $notafter );
-  echo "<tr><td>", _ ( "gültig" ), "</td><td>{$nb[ "day" ]}.{$nb[ "month" ]}.{$nb[ "year" ]} &hellip; {$na[ "day" ]}.{$na[ "month" ]}.{$na[ "year" ]}</td></tr>";
+  echo "<tr><td>", _ ( "gültig" ), "</td><td>", $nb[ "day" ], $nb[ "month" ], $nb[ "year" ], " &hellip; ", $na[ "day" ], $na[ "month" ], $na[ "year" ], "</td></tr>";
 
   echo "</tbody></table></div><a class=\"btn btn-primary\" href=\"downloadCertificate.php\">", _ ( "Zertifikat herunterladen" ), "</a>";
 }
 else
 {
-  alertMsg ( _ ( "Es ist kein Zertifikat vorhanden." ) );
+  showAlertMessage ( _ ( "Es ist kein Zertifikat vorhanden." ) );
 }
 
 echo "</div></div></div>";
 
-require ("include/htmlend.php");
+require ("include/closeHTML.php");

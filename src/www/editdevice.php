@@ -1,315 +1,286 @@
 <?php
 
-//==============================================================================
-//==============================================================================
-//
-//     PROJECT: LiMiT1
-//        FILE: editdevice.php
-//         SEE: https://github.com/ulkuehn/LiMiT1
-//      AUTHOR: Ulrich Kühn
-//
-//       USAGE: by web server
-//
-// DESCRIPTION: used to modify known devices and their properties
-//
-//==============================================================================
-//==============================================================================
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
+
+/**
+ * project LiMiT1
+ * file editDevice.php
+ * 
+ * modify known devices and their properties
+ * 
+ * @author Ulrich Kühn
+ * @see https://github.com/ulkuehn/LiMiT1
+ * @copyright (c) 2017, 2018, Ulrich Kühn
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
+ */
+set_include_path ( pathinfo ( $_SERVER[ "DOCUMENT_ROOT" ] )[ "dirname" ] . "/www" );
+require_once ("include/constants.php");
+require_once ("include/configuration.php");
+require_once ("include/utility.php");
+require_once ("include/tableUtility.php");
+require_once ("include/connectDB.php");
+require_once ("include/globalNames.php");
 
 
-$_hinzu = "Eigenschaft hinzufügen";
-$_name = "Name";
-$_wert = "Wert";
-$_loeschen = "Eigenschaft löschen";
-$_editieren = "Eigenschaft bearbeiten";
-$_aendern = "Gerätenamen ändern";
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
 
-require ("include/constants.php");
-require ("include/configuration.php");
-require ("include/utility.php");
+include ("include/httpHeaders.php");
+include ("include/openHTML.php");
+include ("include/topMenu.php");
 
-require ("include/http.php");
-require ("include/htmlstart.php");
-require ("include/topmenu.php");
-require ("include/database.php");
-
-titleAndHelp ("Gerät bearbeiten", <<<LIMIT1
-Ein vorhandenes Gerät kann hier editiert werden.
-Dabei können bestehende Eigenschaften angepasst oder gelöscht sowie neue Eigenschaften hinzugefügt werden.
-LIMIT1
-);
+titleAndHelp ( _ ( "Gerät bearbeiten" ),
+                   _ ( "Ein vorhandenes Gerät kann hier editiert werden. Dabei können bestehende Eigenschaften angepasst oder gelöscht sowie neue Eigenschaften hinzugefügt werden.<br>Beim Wert einer Eigenschaft wird nicht zwischen Groß- und Kleinschreibung unterschieden. Eine Eigenschaft etwa mit dem Wert \"limit1\" würde daher auch gefunden, wenn der String \"LiMiT1\" übertragen wurde." ) );
 
 
-$select_s = $db->prepare("select * from geraet where id=?");
-$select_s->execute(array($_GET["id"]));
-if (($geraet = $select_s->fetch()) == false)
+$selectDeviceStatement = $db->prepare ( "select * from geraet where id=?" );
+$selectDeviceStatement->execute ( array (
+  $_GET[ $__[ "editDevice" ][ "params" ][ "device" ] ] ) );
+
+/*
+ * device doesn't exist
+ */
+if ( ($device = $selectDeviceStatement->fetch ()) == false )
 {
   echo "<div class=\"row\">";
-  errorMsg ("Das Gerät ist nicht in der Datenbank vorhanden.");
+  showErrorMessage ( _ ( "Das Gerät ist nicht in der Datenbank vorhanden." ) );
   echo "</div>";
 }
+
+/*
+ * device ok
+ */
 else
-{  
-  echo <<<LIMIT1
-<form class="form-horizontal" method="post">
-  <div class="row">
-    <div class="panel panel-primary">
-      <div class="panel-heading">
-        <h4 class="panel-title">Name</h4>
-      </div>
-      <div class="panel-body">
-LIMIT1;
-      
-  // Gerätename ändern
-  if (isset($_POST["aendern"]))
+{
+  echo "<form class=\"form-horizontal\" method=\"post\"><div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "Name" ), "</h4></div><div class=\"panel-body\">";
+
+  /*
+   * change device name
+   */
+  if ( isset ( $_POST[ $__[ "editDevice" ][ "params" ][ "changeName" ] ] ) )
   {
-    $name = trim($_POST["gname"]);
-    if ($name != "" && $name != $geraet["name"])
+    $newDeviceName = trim ( $_POST[ $__[ "editDevice" ][ "params" ][ "deviceName" ] ] );
+    if ( $newDeviceName != "" && $newDeviceName != $device[ "name" ] )
     {
-      $select_s = $db->prepare("select * from geraet where id!=? and binary name=?");
-      $select_s->execute(array($geraet["id"],$name));
-      if (!$select_s->fetch())
+      $selectDeviceStatement = $db->prepare ( "select * from geraet where id!=? and binary name=?" );
+      $selectDeviceStatement->execute ( array (
+        $device[ "id" ],
+        $newDeviceName ) );
+      if ( !$selectDeviceStatement->fetch () )
       {
-        $update_s = $db->prepare("update geraet set name=?, stand=now() where id=?");
-        $update_s->execute(array($name,$geraet["id"]));
-        $geraet["name"] = $name;
-        infoMsg ("Der Gerätename wurde geändert.");
+        $updateDeviceStatement = $db->prepare ( "update geraet set name=?, stand=now() where id=?" );
+        $updateDeviceStatement->execute ( array (
+          $newDeviceName,
+          $device[ "id" ] ) );
+        $device[ "name" ] = $newDeviceName;
+        showInfoMessage ( _ ( "Der Gerätename wurde geändert." ) );
       }
       else
       {
-        errorMsg ("Ein Gerät mit dem Namen \"".htmlSave($name)."\" ist bereits vorhanden.");
-      }        
+        $newDeviceName = htmlSave ( $newDeviceName );
+        showErrorMessage ( _ ( "Ein Gerät mit dem Namen \"$newDeviceName\" ist bereits vorhanden." ) );
+      }
     }
   }
-      
-  $gname = htmlSave($geraet["name"]);
 
-  echo <<<LIMIT1
-        <p><input class="form-control" type="text" name="gname" value="$gname"></p>
-        <input type="submit" class="btn btn-primary" name="aendern" value="$_aendern">
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="panel panel-primary">
-      <div class="panel-heading">
-        <h4 class="panel-title">Eigenschaften</h4>
-      </div>
-      <div class="panel-body">
-LIMIT1;
+  echo "<p><input class=\"form-control\" type=\"text\" name=\"", $__[ "editDevice" ][ "params" ][ "deviceName" ], "\" value=\"", htmlSave ( $device[ "name" ] ), "\"></p><input type=\"submit\" class=\"btn btn-primary\" name=\"", $__[ "editDevice" ][ "params" ][ "changeName" ], "\" value=\"", _ ( "Gerätenamen ändern" ), "\"></div></div></div><div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "Eigenschaften" ), "</h4></div><div class=\"panel-body\">";
 
-  // Eigenschaft hinzufügen
-  if (isset($_POST["hinzu"]))
+  /*
+   * add property
+   */
+  if ( isset ( $_POST[ $__[ "editDevice" ][ "params" ][ "addProperty" ] ] ) )
   {
-    $name = trim($_POST["name"]);
-    $wert = trim($_POST["wert"]);
-    if ($name != "" && $wert != "")
+    $propertyName = trim ( $_POST[ $__[ "editDevice" ][ "params" ][ "propertyName" ] ] );
+    $propertyValue = trim ( $_POST[ $__[ "editDevice" ][ "params" ][ "propertyValue" ] ] );
+    if ( $propertyName != "" && $propertyValue != "" )
     {
-      $select_s = $db->prepare("select * from eigenschaft where geraet=? and binary name=?");
-      $select_s->execute(array($geraet["id"],$name));
-      if (!$select_s->fetch())
+      $selectPropertyStatement = $db->prepare ( "select * from eigenschaft where geraet=? and binary name=?" );
+      $selectPropertyStatement->execute ( array (
+        $device[ "id" ],
+        $propertyName ) );
+      if ( $selectPropertyStatement->fetch () )
       {
-        $insert_s = $db->prepare("insert into eigenschaft set geraet=?, name=?, wert=?");
-        $insert_s->execute(array($geraet["id"],$name,$wert));
-        $update_s = $db->prepare("update geraet set stand=now() where id=?");
-        $update_s->execute(array($geraet["id"]));
+        $propertyName = htmlSave ( $propertyName );
+        showErrorMessage ( _ ( "Die Eigenschaft \"$propertyName\" ist bereits vorhanden." ) );
       }
       else
       {
-        errorMsg ("Die Eigenschaft \"".htmlSave($name)."\" ist bereits vorhanden.");
+        $insertPropertyStatement = $db->prepare ( "insert into eigenschaft set geraet=?, name=?, wert=?" );
+        $insertPropertyStatement->execute ( array (
+          $device[ "id" ],
+          $propertyName,
+          $propertyValue ) );
+        $updateDeviceStatement = $db->prepare ( "update geraet set stand=now() where id=?" );
+        $updateDeviceStatement->execute ( array (
+          $device[ "id" ] ) );
       }
     }
   }
-  
-  // Eigenschaft bearbeiten
-  if (isset($_POST["editieren"]))
+
+  /*
+   * edit property
+   */
+  if ( isset ( $_POST[ $__[ "editDevice" ][ "params" ][ "editProperty" ] ] ) )
   {
-    $select_s = $db->prepare("select * from eigenschaft where id=?");
-    $select_s->execute(array($_POST["hid"]));
-    if (!$select_s->fetch())
+    $selectPropertyStatement = $db->prepare ( "select * from eigenschaft where id=?" );
+    $selectPropertyStatement->execute ( array (
+      $_POST[ $__[ "editDevice" ][ "params" ][ "property" ] ] ) );
+    if ( !$selectPropertyStatement->fetch () )
     {
-      errorMsg ("Die Eigenschaft ist nicht in der Datenbank vorhanden.");
+      showErrorMessage ( _ ( "Die Eigenschaft ist nicht in der Datenbank vorhanden." ) );
     }
     else
     {
-      $name = trim($_POST["ename"]);
-      $wert = trim($_POST["ewert"]);
-      if ($name != "" && $wert != "")
+      $propertyName = trim ( $_POST[ $__[ "editDevice" ] [ "params" ][ "editPropertyName" ] ] );
+      $propertyValue = trim ( $_POST[ $__[ "editDevice" ] [ "params" ][ "editPropertyValue" ] ] );
+      if ( $propertyName != "" && $propertyValue != "" )
       {
-        $select_s = $db->prepare("select * from eigenschaft where geraet=? and binary name=? and id!=?");
-        $select_s->execute(array($geraet["id"],$name,$_POST["hid"]));
-        if (!$select_s->fetch())
+        $selectPropertyStatement = $db->prepare ( "select * from eigenschaft where geraet=? and binary name=? and id!=?" );
+        $selectPropertyStatement->execute ( array (
+          $device[ "id" ],
+          $propertyName,
+          $_POST[ $__[ "editDevice" ][ "params" ][ "property" ] ] ) );
+        if ( !$selectPropertyStatement->fetch () )
         {
-          $update_s = $db->prepare("update eigenschaft set name=?, wert=? where id=?");
-          $update_s->execute(array($name,$wert,$_POST["hid"]));
-          $update_s = $db->prepare("update geraet set stand=now() where id=?");
-          $update_s->execute(array($geraet["id"]));
+          $updatePropertyStatement = $db->prepare ( "update eigenschaft set name=?, wert=? where id=?" );
+          $updatePropertyStatement->execute ( array (
+            $propertyName,
+            $propertyValue,
+            $_POST[ $__[ "editDevice" ][ "params" ][ "property" ] ] ) );
+          $updateDeviceStatement = $db->prepare ( "update geraet set stand=now() where id=?" );
+          $updateDeviceStatement->execute ( array (
+            $device[ "id" ] ) );
         }
         else
         {
-          errorMsg ("Die Eigenschaft \"".htmlSave($name)."\" ist bereits vorhanden.");
+          $propertyName = htmlSave ( $propertyName );
+          showErrorMessage ( _ ( "Die Eigenschaft \"$propertyName\" ist bereits vorhanden." ) );
         }
-      }        
+      }
     }
   }
-  
-  // Eigenschaft löschen
-  if (isset($_POST["loeschen"]))
+
+  /*
+   * delete property
+   */
+  if ( isset ( $_POST[ $__[ "editDevice" ][ "params" ][ "deleteProperty" ] ] ) )
   {
-    $select_s = $db->prepare("select * from eigenschaft where id=?");
-    $select_s->execute(array($_POST["hid"]));
-    if ($eigenschaft = $select_s->fetch())
+    $selectPropertyStatement = $db->prepare ( "select * from eigenschaft where id=?" );
+    $selectPropertyStatement->execute ( array (
+      $_POST[ $__[ "editDevice" ][ "params" ][ "property" ] ] ) );
+    if ( $property = $selectPropertyStatement->fetch () )
     {
-      $delete_s = $db->prepare("delete from eigenschaft where id=?");
-      $delete_s->execute (array($eigenschaft["id"]));          
-      $update_s = $db->prepare("update geraet set stand=now() where id=?");
-      $update_s->execute(array($geraet["id"]));
+      $deletePropertyStatement = $db->prepare ( "delete from eigenschaft where id=?" );
+      $deletePropertyStatement->execute ( array (
+        $property[ "id" ] ) );
+      $updateDeviceStatement = $db->prepare ( "update geraet set stand=now() where id=?" );
+      $updateDeviceStatement->execute ( array (
+        $device[ "id" ] ) );
     }
     else
     {
-      errorMsg ("Die Eigenschaft ist nicht in der Datenbank vorhanden.");
+      showErrorMessage ( _ ( "Die Eigenschaft ist nicht in der Datenbank vorhanden." ) );
     }
   }
 
-  $select_s = $db->prepare("select * from eigenschaft where geraet=? order by name");
-  $select_s->execute(array($_GET["id"]));
-  
-  if (($eigenschaft = $select_s->fetch()) == false)
+
+  /*
+   * tabulate properties
+   */
+  $selectPropertyStatement = $db->prepare ( "select * from eigenschaft where geraet=? order by name" );
+  $selectPropertyStatement->execute ( array (
+    $_GET[ $__[ "editDevice" ][ "params" ][ "device" ] ] ) );
+
+  if ( ($property = $selectPropertyStatement->fetch ()) == false )
   {
-    infoMsg ("Zu diesem Gerät ist keine Eigenschaft eingetragen.");
+    showInfoMessage ( _ ( "Zu diesem Gerät ist keine Eigenschaft eingetragen." ) );
   }
   else
   {
-    echo tableSorter ("Eigenschaften", "columns: [ {orderable:false, searchable:false}, {}, {} ], order: [ [1,'asc'] ]");
-    $foldMe = tableFolder ("Eigenschaften");
+    echo tableSorter ( $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ],
+                       "columns: [ {orderable:false, searchable:false}, {}, {} ], order: [ [1,'asc'] ]" );
+    $foldMe = tableFolder ( $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ] );
 
-    echo <<<LIMIT1
-  <input type="hidden" id="hid" name="hid" value="">
-  <div class="table-responsive">
-    <table id="Eigenschaften" class="table table-hover">
-      <thead>
-        <tr>
-          <th>$foldMe</th>
-          <th>Eigenschaft</th>
-          <th>Wert</th>
-        </tr>
-      </thead>
-      <tbody>
-LIMIT1;
- 
+    echo "<input type=\"hidden\" id=\"", $__[ "editDevice" ][ "params" ][ "property" ], "\" name=\"", $__[ "editDevice" ][ "params" ][ "property" ], "\" value=\"\"><div class=\"table-responsive\"><table id=\"", $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ], "\" class=\"table table-hover\"><thead><tr>";
+    /*
+     * edit button etc
+     */
+    echo "<th>$foldMe</th>";
+    /*
+     * property name
+     */
+    echo "<th>", _ ( "Eigenschaft" ), "</th>";
+    /*
+     * property value
+     */
+    echo "<th>", _ ( "Wert" ), "</th></tr></thead><tbody>";
+
     do
     {
       echo "<tr>";
 
+      /*
+       * buttons
+       */
       echo "<td><span style=\"white-space:nowrap\">";
-      echo "<a href=\"#editModal\" title=\"$_editieren\" class=\"btn btn-success btn-xs\" data-toggle=\"modal\" onclick=\"document.getElementById('ename').value='",jsSave($eigenschaft["name"]),"'; document.getElementById('ewert').value='",jsSave($eigenschaft["wert"]),"'; document.getElementById('hid').value='",$eigenschaft["id"],"';\"><i class=\"fa fa-pencil\"></i></a>";
-      echo "<span class=\"fullEigenschaften\"> <a href=\"#loeschenModal\" title=\"$_loeschen\" class=\"btn btn-danger btn-xs\" data-toggle=\"modal\" onclick=\"document.getElementById('eigenschaft').innerHTML='",jsSave(htmlspecialchars($eigenschaft["name"])),"';document.getElementById('hid').value='",$eigenschaft["id"],"';\"><i class=\"fa fa-trash\"></i></a></span>";
+      echo "<a href=\"#", $__[ "editDevice" ] [ "ids" ] [ "editModal" ], "\" title=\"", $__[ "editDevice" ][ "values" ][ "editProperty" ], "\" class=\"btn btn-success btn-xs\" data-toggle=\"modal\" onclick=\"document.getElementById('", $__[ "editDevice" ] [ "params" ][ "editPropertyName" ], "').value='", jsSave ( $property[ "name" ] ), "'; document.getElementById('", $__[ "editDevice" ] [ "params" ][ "editPropertyValue" ], "').value='", jsSave ( $property[ "wert" ] ), "'; document.getElementById('", $__[ "editDevice" ][ "params" ][ "property" ], "').value='", $property[ "id" ], "';\"><i class=\"fa fa-pencil\"></i></a>";
+      echo "<span class=\"", $__[ "include/tableUtility" ][ "ids" ] [ "unfoldedPrefix" ], $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ], "\"> <a href=\"#", $__[ "editDevice" ] [ "ids" ] [ "deleteModal" ], "\" title=\"", $__[ "editDevice" ][ "values" ][ "deleteProperty" ], "\" class=\"btn btn-danger btn-xs\" data-toggle=\"modal\" onclick=\"document.getElementById('", $__[ "editDevice" ] [ "ids" ] [ "property" ], "').innerHTML='", jsSave ( htmlspecialchars ( $property[ "name" ] ) ), "';document.getElementById('", $__[ "editDevice" ][ "params" ][ "property" ], "').value='", $property[ "id" ], "';\"><i class=\"fa fa-trash\"></i></a></span>";
       echo "</span></td>";
 
-      echo faltZelle ($eigenschaft["name"], "Eigenschaften");
+      /*
+       * name
+       */
+      echo foldableTableCell ( $property[ "name" ],
+                               $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ] );
 
-      echo faltZelle ($eigenschaft["wert"], "Eigenschaften");
+      /*
+       * value
+       */
+      echo foldableTableCell ( $property[ "wert" ],
+                               $__[ "editDevice" ][ "ids" ][ "tables" ][ "properties" ] );
 
       echo "</tr>";
     }
-    while ($eigenschaft = $select_s->fetch());
-    
+    while ( $property = $selectPropertyStatement->fetch () );
+
     echo "</tbody></table></div>";
-  }   
+  }
 
-  echo <<<LIMIT1
-        <a href="#hinzuModal" class="btn btn-primary" data-toggle="modal">$_hinzu</a>
-      </div>
-    </div>
-  </div>
-  
-  
-  <div class="modal fade" id="hinzuModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="alert alert-info" role="alert">
-            <div class="msgIcon"><i class="fa fa-plus fa-2x"></i></div>
-            <div class="msgText"><strong>$_hinzu</strong></div>
-          </div>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="hname" class="col-md-2 control-label">$_name</label>
-            <div class="col-md-10">
-              <input type="text" class="form-control" name="name" id="hname">
-            </div>
-          </div>  
-          <div class="form-group">
-            <label for="hwert" class="col-md-2 control-label">$_wert</label>
-            <div class="col-md-10">
-              <input type="text" class="form-control" name="wert" id="hwert">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <input class="btn btn-primary" type="submit" value="$_hinzu" name="hinzu">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  /*
+   * add property button
+   */
+  echo "<a href=\"#", $__[ "editDevice" ] [ "ids" ] [ "addModal" ], "\" class=\"btn btn-primary\" data-toggle=\"modal\">", $__[ "editDevice" ][ "values" ][ "addProperty" ], "</a></div></div></div>";
 
-  <div class="modal fade" id="loeschenModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="alert alert-danger" role="alert">
-            <div class="msgIcon"><i class="fa fa-trash fa-2x"></i></div>
-            <div class="msgText"><strong>$_loeschen</strong></div>
-          </div>
-        </div>
-        <div class="modal-body">
-          <p>Soll die Eigenschaft <strong><span id="eigenschaft"></span></strong> gelöscht werden?</p>
-        </div>
-        <div class="modal-footer">
-          <input class="btn btn-danger" type="submit" value="$_loeschen" name="loeschen">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="modal fade" id="editModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="alert alert-success" role="alert">
-            <div class="msgIcon"><i class="fa fa-pencil fa-2x"></i></div>
-            <div class="msgText"><strong>$_editieren</strong></div>
-          </div>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="ename" class="col-md-2 control-label">$_name</label>
-            <div class="col-md-10">
-              <input type="text" class="form-control" name="ename" id="ename">
-            </div>
-          </div>  
-          <div class="form-group">
-            <label for="ewert" class="col-md-2 control-label">$_wert</label>
-            <div class="col-md-10">
-              <input type="text" class="form-control" name="ewert" id="ewert">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <input class="btn btn-success" type="submit" value="$_editieren" name="editieren">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  /*
+   * add property modal
+   */
+  echo "<div class=\"modal fade\" id=\"", $__[ "editDevice" ] [ "ids" ] [ "addModal" ], "\" tabindex=\"-1\" role=\"dialog\"><div class=\"modal-dialog modal-lg\" role=\"document\"><div class=\"modal-content\">";
+  echo "<div class=\"modal-header\"><div class=\"alert alert-info\" role=\"alert\"><div class=\"msgIcon\"><i class=\"fa fa-plus fa-2x\"></i></div><div class=\"msgText\"><strong>", $__[ "editDevice" ][ "values" ][ "addProperty" ], "</strong></div></div></div>";
+  echo "<div class=\"modal-body\"><div class=\"form-group\"><label for=\"", $__[ "editDevice" ][ "params" ][ "propertyName" ], "\" class=\"col-md-2 control-label\">", _ ( "Name" ), "</label><div class=\"col-md-10\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "editDevice" ][ "params" ][ "propertyName" ], "\" id=\"", $__[ "editDevice" ][ "params" ][ "propertyName" ], "\"></div></div><div class=\"form-group\"><label for=\"", $__[ "editDevice" ][ "params" ][ "propertyValue" ], "\" class=\"col-md-2 control-label\">", _ ( "Wert" ), "</label><div class=\"col-md-10\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "editDevice" ][ "params" ][ "propertyValue" ], "\" id=\"", $__[ "editDevice" ][ "params" ][ "propertyValue" ], "\"></div></div></div>";
+  echo "<div class=\"modal-footer\"><input class=\"btn btn-primary\" type=\"submit\" value=\"", $__[ "editDevice" ][ "values" ][ "addProperty" ], "\" name=\"", $__[ "editDevice" ][ "params" ][ "addProperty" ], "\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">", _ ( "Abbrechen" ), "</button></div></div></div></div>";
 
-</form>
-LIMIT1;
+  /*
+   * delete property modal
+   */
+  echo "<div class=\"modal fade\" id=\"", $__[ "editDevice" ] [ "ids" ] [ "deleteModal" ], "\" tabindex=\"-1\" role=\"dialog\"><div class=\"modal-dialog\" role=\"document\"><div class=\"modal-content\">";
+  echo "<div class=\"modal-header\"><div class=\"alert alert-danger\" role=\"alert\"><div class=\"msgIcon\"><i class=\"fa fa-trash fa-2x\"></i></div><div class=\"msgText\"><strong>", $__[ "editDevice" ][ "values" ][ "deleteProperty" ], "</strong></div></div></div>";
+  echo "<div class=\"modal-body\"><p>", _ ( "Soll die Eigenschaft" ), " <strong><span id=\"", $__[ "editDevice" ] [ "ids" ] [ "property" ], "\"></span></strong> ", _ ( "gelöscht werden?" ), "</p></div>";
+  echo "<div class=\"modal-footer\"><input class=\"btn btn-danger\" type=\"submit\" value=\"", $__[ "editDevice" ][ "values" ][ "deleteProperty" ], "\" name=\"", $__[ "editDevice" ][ "params" ][ "deleteProperty" ], "\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">", _ ( "Abbrechen" ), "</button></div></div></div></div>";
 
+  /*
+   * edit property modal
+   */
+  echo "<div class=\"modal fade\" id=\"", $__[ "editDevice" ] [ "ids" ] [ "editModal" ], "\" tabindex=\"-1\" role=\"dialog\"><div class=\"modal-dialog modal-lg\" role=\"document\"><div class=\"modal-content\">";
+  echo "<div class=\"modal-header\"><div class=\"alert alert-success\" role=\"alert\"><div class=\"msgIcon\"><i class=\"fa fa-pencil fa-2x\"></i></div><div class=\"msgText\"><strong>", $__[ "editDevice" ][ "values" ][ "editProperty" ], "</strong></div></div></div>";
+  echo "<div class=\"modal-body\"><div class=\"form-group\"><label for=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyName" ], "\" class=\"col-md-2 control-label\">", _ ( "Name" ), "</label><div class=\"col-md-10\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyName" ], "\" id=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyName" ], "\"></div></div><div class=\"form-group\"><label for=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyValue" ], "\" class=\"col-md-2 control-label\">", _ ( "Wert" ), "</label><div class=\"col-md-10\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyValue" ], "\" id=\"", $__[ "editDevice" ] [ "params" ][ "editPropertyValue" ], "\"></div></div></div>";
+  echo "<div class=\"modal-footer\"><input class=\"btn btn-success\" type=\"submit\" value=\"", $__[ "editDevice" ][ "values" ][ "editProperty" ], "\" name=\"", $__[ "editDevice" ][ "params" ][ "editProperty" ], "\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Abbrechen</button></div></div></div></div></form>";
 }
 
-require ("include/htmlend.php");
-
-?>
+include ("include/closeHTML.php");

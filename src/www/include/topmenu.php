@@ -1,113 +1,48 @@
 <?php
 
+/* ===========================================================================
+ *
+ * PREAMBLE
+ *
+ * ======================================================================== */
+
 /**
  * project LiMiT1
- * file include/topmenu.php
- * 
- * used to display the top menu and utility boxes
- * 
+ * file include/topMenu.php
+ *
+ * display the top menu and utility boxes
+ *
  * @author Ulrich Kühn
  * @see https://github.com/ulkuehn/LiMiT1
- * @copyright (c) 2017, Ulrich Kühn
+ * @copyright (c) 2017, 2018, Ulrich Kühn
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
  */
-///////////////////////////////////////////////////////////////////////////////
-// 
-// definition of names and values
-// 
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * id of the status modal
- */
-$statusModalID = "statusModal";
-/**
- * id of the status modal content span
- */
-$statusModalContentID = "statusContent";
-/**
- * URL of the script providing status info
- */
-$statusProviderURL = "include/info.php";
-/**
- * name of the JS function called for updating the status info
- */
-$statusJSFunction = "status ()";
-/**
- * status info update frequency (ms)
- */
-$statusUpdateMS = 1000;
-
-/**
- * URL of the script providing button state info
- */
-$buttonProviderURL = "include/buttonstate.php";
-/**
- * name of the JS function called for updating buttons
- */
-$buttonJSFunction = "buttonState ()";
-/**
- * button state info update frequency (ms)
- */
-$buttonUpdateMS = 500;
-
-/**
- * id of the navbar div
- */
-$navbarID = "topmenu";
-/**
- * id of the record button element
- */
-$recordButtonID = "topmenuRecord";
-/**
- * id of the menu item to go online via LAN
- */
-$lanOnlineID = "topmenuLan";
-/**
- * id of the menu item to go online via WLAN
- */
-$wlanOnlineID = "topmenuWlan";
-/**
- * id of the menu item to go online via UMTS
- */
-$umtsOnlineID = "topmenuUmts";
-/**
- * id of the menu item to go offline
- */
-$offlineID = "topmenuOffline";
-
-/**
- * parameters for utility boxes (hover text, name, icon, URL, extra parameters)
- */
-$searchBox = [ _ ( "Suche" ), "search", "fa-search", "suche.php", "<input type=\"hidden\" name=\"caseSwitch\" value=\"on\"><input type=\"hidden\" name=\"orte\" value=\"alle\">" ];
-$decodeBox = [ _ ( "Dekodieren" ), "decode", "fa-quote-right", "dekodieren.php", "" ];
-$whoisBox = [ _ ( "Whois" ), "whois", "fa-institution", "whois.php", "" ];
+set_include_path ( pathinfo ( $_SERVER[ "DOCUMENT_ROOT" ] )[ "dirname" ] . "/www" );
+require_once ("include/constants.php");
+require_once ("include/configuration.php");
+require_once ("include/utility.php");
+require_once ("include/connectDB.php");
+require_once ("include/globalNames.php");
 
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// helper functions
-// 
-///////////////////////////////////////////////////////////////////////////////
+/* ===========================================================================
+ *
+ * FUNCTIONS
+ *
+ * ======================================================================== */
 
 /**
  * add a dropdown menu
- * 
- * @param string $fa the name of the font awesome icon to display
+ *
+ * @param string $faIcon the name of the font awesome icon to display
  * @param string $text the text to use (possibly i18n'd)
- * 
+ *
  * @return NULL nothing
  */
-function openMenu ( $fa, $text )
+function openMenu ( $faIcon,
+                    $text )
 {
-  echo <<<LIMIT1
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"><i class="fa $fa"></i> <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li class="dropdown-header">
-              <p class="text-center">$text</p>
-            </li>
-LIMIT1;
+  echo "<li class=\"dropdown\"><a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\"><i class=\"fa $faIcon\"></i> <span class=\"caret\"></span></a><ul class=\"dropdown-menu\"><li class=\"dropdown-header\"><p class=\"text-center\">$text</p></li>";
 }
 
 
@@ -122,7 +57,7 @@ function closeMenu ()
 
 /**
  * put a separator line in a drop down menu
- * 
+ *
  * @return NULL nothing
  */
 function menuSeparator ()
@@ -133,66 +68,52 @@ function menuSeparator ()
 
 /**
  * add an entry to a drop down menu
- * 
+ *
  * @param string $url the (relative) url to call when this menu item is activated
- * @param string $fa the name of the font awesome icon to display
+ * @param string $faIcon the name of the font awesome icon to display
  * @param type $text the text to use (possibly i18n'd)
- * 
+ *
  * @return NULL nothing
  */
-function menuEntry ( $url, $fa, $text )
+function menuEntry ( $url,
+                     $faIcon,
+                     $text )
 {
-  echo <<<LIMIT1
-    <li>
-      <a href="$url"><i class="fa $fa fa-fw topmenu"></i> $text</a>
-    </li>
-LIMIT1;
+  echo "<li><a href=\"$url\"><i class=\"fa $faIcon fa-fw topmenu\"></i> $text</a></li>";
 }
 
 
 /**
  * create a utility box (search etc)
- * 
- * @param array $box parameters for that box (title, name, icon, URL, extra Parameters)
+ *
+ * @param array $box parameters for that box (title, name, frame, icon, URL, extra Parameters)
  *
  * @return NULL nothing
  */
 function utilityBox ( $box )
 {
-  global $__usetabs, $my_name;
-  list ($title, $name, $fa, $url, $extraParameters) = $box;
+  global $__usetabs, $my_name, $__;
+  list ($title, $name, $frame, $faIcon, $url, $extraParameters) = $box;
 
-  echo "<form class=\"navbar-form navbar-right\" method=\"post\" action=\"$url\"", ($__usetabs ? " target=\"$my_name$name\"" : ""), ">";
-  echo <<<LIMIT1
-        <input type="hidden" name="$name" id="$name" value="">
-        $extraParameters
-        <div class="input-group input-group-sm">
-          <input type="text" class="form-control" name="x$name" id="x$name">
-          <span class="input-group-btn">
-          <button title="$title" type="submit" class="btn btn-default" onclick="document.getElementById('$name').value=document.getElementById('x$name').value; document.getElementById('x$name').value='';">
-            <i class="fa $fa"></i>
-          </button>
-          </span>
-        </div>
-      </form>
-LIMIT1;
+  echo "<form class=\"navbar-form navbar-right\" method=\"post\" action=\"$url\"", ($__usetabs ? " target=\"$my_name$frame\"" : ""), ">";
+  echo "<input type=\"hidden\" name=\"$name\" id=\"", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix1" ], $name, "\" value=\"\">$extraParameters<div class=\"input-group input-group-sm\"><input type=\"text\" class=\"form-control\" name=\"", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix2" ], $name, "\" id=\"", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix2" ], $name, "\"><span class=\"input-group-btn\"><button title=\"$title\" type=\"submit\" class=\"btn btn-default\" onclick=\"document.getElementById('", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix1" ], $name, "').value=document.getElementById('", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix2" ], $name, "').value; document.getElementById('", $__[ "include/topMenu" ] [ "ids" ] [ "utilityPrefix2" ], $name, "').value='';\"><i class=\"fa $faIcon\"></i></button></span></div></form>";
 }
 
 
 /**
  * add an utility box related entry to a drop down menu
- * 
- * @param array $box parameters for that box (title, name, icon, URL)
+ *
+ * @param array $box parameters for that box (title, name, frame, icon, URL)
  *
  * @return NULL nothing
  */
 function boxMenuEntry ( $box )
 {
   global $__usetabs, $my_name;
-  list ($title, $name, $fa, $url) = $box;
+  list ($title, $name, $frame, $fa, $url) = $box;
 
   echo "<li>";
-  echo "<a href=\"$url\"", ($__usetabs ? " target=\"$my_name$name\"" : ""), ">";
+  echo "<a href=\"$url\"", ($__usetabs ? " target=\"$my_name$frame\"" : ""), ">";
   echo "<i class=\"fa $fa fa-fw topmenu\"></i> ";
   echo $title;
   echo "</a>";
@@ -200,193 +121,99 @@ function boxMenuEntry ( $box )
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// status info
-// 
-///////////////////////////////////////////////////////////////////////////////
+/* ===========================================================================
+ *
+ * MAIN CODE
+ *
+ * ======================================================================== */
+
+/**
+ * parameters for utility boxes (hover text, param name, frame name, icon, URL, extra parameters)
+ */
+$searchBox = [
+  $__[ "search" ] [ "values" ][ "search" ],
+  $__[ "search" ] [ "params" ] [ "search" ],
+  $__[ "search" ][ "names" ][ "frame" ],
+  $__[ "search" ][ "values" ][ "icon" ],
+  "search.php",
+  "<input type=\"hidden\" name=\"" . $__[ "search" ][ "params" ] [ "case" ] . "\" value=\"on\"><input type=\"hidden\" name=\"" . $__[ "search" ][ "params" ] [ "areas" ] . "\" value=\"on\">" ];
+
+$decodeBox = [
+  $__[ "decode" ][ "values" ][ "decode" ],
+  $__[ "decode" ][ "params" ][ "input" ],
+  $__[ "decode" ][ "names" ][ "frame" ],
+  $__[ "decode" ][ "values" ][ "icon" ],
+  "decode.php",
+  "" ];
+
+$whoisBox = [
+  $__[ "whois" ][ "values" ][ "whois" ],
+  $__[ "whois" ][ "params" ][ "whois" ],
+  $__[ "whois" ][ "names" ][ "frame" ],
+  $__[ "whois" ][ "values" ][ "icon" ],
+  "whois.php",
+  "" ];
+
 
 /*
  * define modal window providing some basic status info
  */
-echo <<<LIMIT1
-<div class="modal fade" id="$statusModalID" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="alert alert-info" role="alert">
-          <div class="msgIcon"><i class="fa fa-info-circle fa-2x"></i></div>
-          <div class="msgText"><strong>
-LIMIT1;
-
-echo _ ( "$my_name-Status" );
-
-echo <<<LIMIT1
-</strong></div>
-        </div>
-      </div>
-      <div class="modal-body">
-        <span id="$statusModalContentID"></span>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-info" data-dismiss="modal">
-LIMIT1;
-
-echo _ ( "Schließen" );
-
-echo <<<LIMIT1
-</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-LIMIT1;
+echo "<div class=\"modal fade\" id=\"", $__[ "include/topMenu" ][ "ids" ][ "statusModal" ], "\" tabindex=\"-1\" role=\"dialog\"><div class=\"modal-dialog modal-lg\" role=\"document\"><div class=\"modal-content\"><div class=\"modal-header\"><div class=\"alert alert-info\" role=\"alert\"><div class=\"msgIcon\"><i class=\"fa fa-info-circle fa-2x\"></i></div><div class=\"msgText\"><strong>", _ ( "$my_name-Status" ), "</strong></div></div></div><div class=\"modal-body\"><span id=\"", $__[ "include/topMenu" ][ "ids" ][ "statusContent" ], "\"></span></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-info\" data-dismiss=\"modal\">", _ ( "Schließen" ), "</button></div></div></div></div>";
 
 /*
  * include javascript code to periodically update content of status window
  * the called script is supposed to return proper html that can be inserted in a span-tag
  */
-echo <<<LIMIT1
-<script>
-function $statusJSFunction
-{
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() 
-  {
-    if (xmlhttp.readyState==4 && xmlhttp.status==200) 
-    {
-      document.getElementById("$statusModalContentID").innerHTML = xmlhttp.responseText;
-    }
-  }
-  
-  xmlhttp.open("GET","$statusProviderURL",true);
-  xmlhttp.send();
-}
-var myVar = setInterval (function () { $statusJSFunction }, $statusUpdateMS);
-</script>
-    
-LIMIT1;
+echo "<script>function ", $__[ "include/topMenu" ][ "js" ][ "statusFunction" ], " { var xmlhttp = new XMLHttpRequest(); xmlhttp.onreadystatechange = function() { if (xmlhttp.readyState==4 && xmlhttp.status==200) {";
+echo "document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "statusContent" ], "\").innerHTML = xmlhttp.responseText; } }; xmlhttp.open(\"GET\",\"", $__[ "include/topMenu" ][ "urls" ][ "statusProvider" ], "\",true); xmlhttp.send(); } var myVar = setInterval (function () { ", $__[ "include/topMenu" ][ "js" ][ "statusFunction" ], " }, 1000); </script>";
 
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// button updates
-// 
-///////////////////////////////////////////////////////////////////////////////
 
 /*
  * include javascript code to periodically update the visual state of certain buttons, including:
  *  - buttons to go online via LAN, WLAN, UMTS (enabling only when necessary hardware is detected)
  *  - button to go offline (enabling only when online)
  *  - record button (switching between starting or stopping a recording or ongoing database update)
- *  
+ *
  * state information is provided by script which is called asynchronously
  */
 
-echo <<<LIMIT1
-<script>
-function $buttonJSFunction
-{
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() 
-  {
-    if (xmlhttp.readyState==4 && xmlhttp.status==200) 
-    {
-      var res = xmlhttp.responseText.split (";");
-      if (res[0]==1)
-      {
-        document.getElementById("$lanOnlineID").classList.remove("disabled");
-      }
-      else
-      {
-        document.getElementById("$lanOnlineID").classList.add("disabled");
-      }
-      if (res[1]==1)
-      {
-        document.getElementById("$wlanOnlineID").classList.remove("disabled");
-      }
-      else
-      {
-        document.getElementById("$wlanOnlineID").classList.add("disabled");
-      }
-      if (res[2]==1)
-      {
-        document.getElementById("$umtsOnlineID").classList.remove("disabled");
-      }
-      else
-      {
-        document.getElementById("$umtsOnlineID").classList.add("disabled");
-      }
-      if (res[3]==1)
-      {
-        document.getElementById("$offlineID").classList.remove("disabled");
-      }
-      else
-      {
-        document.getElementById("$offlineID").classList.add("disabled");
-      }
-      if (document.getElementById("$recordButtonID").innerHTML != res[4])
-      {
-        document.getElementById("$recordButtonID").innerHTML = res[4];
-      }
-    }
-  }
-  
-  xmlhttp.open("GET","$buttonProviderURL",true);
-  xmlhttp.send();
-}
-var myVar = setInterval (function () { $buttonJSFunction }, $buttonUpdateMS);
-</script>
+echo "<script> function ", $__[ "include/topMenu" ][ "js" ][ "buttonFunction" ], " { var xmlhttp = new XMLHttpRequest(); xmlhttp.onreadystatechange = function() { if (xmlhttp.readyState==4 && xmlhttp.status==200) { var res = xmlhttp.responseText.split (\";\"); ";
+echo "if (res[0]==2) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "lanOnline" ], "\").classList.remove(\"disabled\"); } else if (res[0]==1) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "lanOnline" ], "\").classList.add(\"disabled\"); } ";
+echo "if (res[1]==1) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "wlanOnline" ], "\").classList.remove(\"disabled\"); } else { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "wlanOnline" ], "\").classList.add(\"disabled\"); } ";
+echo "if (res[2]==1) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "umtsOnline" ], "\").classList.remove(\"disabled\"); } else { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "umtsOnline" ], "\").classList.add(\"disabled\"); } ";
+echo "if (res[3]>0) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "memoryStick" ], "\").classList.remove(\"disabled\"); } else { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "memoryStick" ], "\").classList.add(\"disabled\"); } ";
+echo "if (res[3]==2) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "memoryStick" ], "\").innerHTML='", $__[ "include/topMenu" ] [ "values" ] [ "unmountMemoryStick" ], " ", $__[ "include/topMenu" ] [ "values" ] [ "toolsUnmountMemoryStickMenuName" ], "</a>", "'; } else { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "memoryStick" ], "\").innerHTML='", $__[ "include/topMenu" ] [ "values" ] [ "mountMemoryStick" ], " ", $__[ "include/topMenu" ] [ "values" ] [ "toolsMountMemoryStickMenuName" ], "</a>", "'; } ";
+echo "if (res[4]==1) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "offline" ], "\").classList.remove(\"disabled\"); } else { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "offline" ], "\").classList.add(\"disabled\"); }";
+echo "if (document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "recordButton" ], "\").innerHTML != res[5]) { document.getElementById(\"", $__[ "include/topMenu" ][ "ids" ][ "recordButton" ], "\").innerHTML = res[5]; }";
+echo "} }; xmlhttp.open(\"GET\",\"", $__[ "include/topMenu" ][ "urls" ][ "buttonProvider" ], "\",true);  xmlhttp.send(); } var myVar = setInterval (function () { ", $__[ "include/topMenu" ][ "js" ][ "buttonFunction" ], " }, 1000); </script>";
 
-LIMIT1;
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// navbar
-// 
-///////////////////////////////////////////////////////////////////////////////
 
 /*
  * open navbar container
  */
 
-echo <<<LIMIT1
-<nav class="navbar navbar-default navbar-fixed-top">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#$navbarID">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <div class="collapse navbar-collapse" id="$navbarID">
-      <ul class="nav navbar-nav">
-    
-LIMIT1;
+echo "<nav class=\"navbar navbar-default navbar-fixed-top\"><div class=\"container-fluid\"><div class=\"navbar-header\"><button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#", $__[ "include/topMenu" ][ "ids" ][ "navBar" ], "\"><span class=\"icon-bar\"></span><span class=\"icon-bar\"></span><span class=\"icon-bar\"></span></button></div><div class=\"collapse navbar-collapse\" id=\"", $__[ "include/topMenu" ][ "ids" ][ "navBar" ], "\"><ul class=\"nav navbar-nav\">";
 
 
 /*
  * start or stop a recording
  */
 
-if ( file_exists ( $session_file ) ) // we do have a running session
+if ( file_exists ( $temp_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "sessionFile" ] ) )
 {
-  $sfile = fopen ( $session_file,
+  $sfile = fopen ( $temp_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "sessionFile" ],
                    "r" );
   $sessionID = trim ( fgets ( $sfile ) );
   $sessionIP = trim ( fgets ( $sfile ) );
   $isRunning = trim ( fgets ( $sfile ) );
   fclose ( $sfile );
-  $button = $isRunning ? $recordStop : $recordEnd;
+  $button = $isRunning ? $__[ "include/topMenu" ][ "values" ][ "recordStop" ] : $__[ "include/topMenu" ][ "values" ][ "recordEnd" ];
 }
 else
 {
-  $button = $recordStart;
+  $button = $__[ "include/topMenu" ][ "values" ][ "recordStart" ];
 }
-echo "<li id=\"$recordButtonID\">$button</li>";
+echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "recordButton" ], "\">$button</li>";
 
 
 /*
@@ -394,204 +221,272 @@ echo "<li id=\"$recordButtonID\">$button</li>";
  */
 
 echo "<li>";
-echo "<a href=\"#$statusModalID\" data-toggle=\"modal\">";
-echo "<i class=\"fa fa-info-circle fa-lg\"></i>";
+echo "<a href=\"#", $__[ "include/topMenu" ][ "ids" ][ "statusModal" ], "\" data-toggle=\"modal\">";
+echo "<i class=\"fa ", $__[ "include/topMenu" ] [ "values" ] [ "statusMenuIcon" ], " fa-lg\"></i>";
 echo "</a>";
 echo "</li>";
 
 
 /*
- * analysis
+ * 
+ * evaluations
+ * 
  */
 
-openMenu ( "fa-bars",
-           _ ( "Auswerten" ) );
+openMenu ( $__[ "include/topMenu" ] [ "values" ] [ "evaluateMenuIcon" ],
+           $__[ "include/topMenu" ] [ "values" ] [ "evaluateMenuName" ] );
 
-// recordings
-menuEntry ( "aufzeichnungen.php",
+/*
+ * recordings
+ */
+menuEntry ( "evaluateRecordings.php",
             "fa-database",
-            _ ( "Aufzeichnungen" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateMenuRecordingsMenuName" ] );
 
 menuSeparator ();
 
-// properties
-menuEntry ( "properties.php",
+/*
+ * properties
+ */
+menuEntry ( "evaluateProperties.php",
             "fa-tablet",
-            _ ( "Eigenschaften" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluatePropertiesMenuName" ] );
 
-// contents
-menuEntry ( "inhalte.php",
+/*
+ * contents
+ */
+menuEntry ( "evaluateContents.php",
             "fa-file-o",
-            _ ( "Inhalte" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateContentsMenuName" ] );
 
-// images
-menuEntry ( "bilder.php",
+/*
+ * images
+ */
+menuEntry ( "evaluateImages.php",
             "fa-picture-o",
-            _ ( "Bilder" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateImagesMenuName" ]  );
 
-// metadata
-menuEntry ( "metadaten.php",
+/*
+ * metadata
+ */
+menuEntry ( "evaluateMetadata.php",
             "fa-tags",
-            _ ( "Metadaten" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateMetadataMenuName" ]  );
 
 menuSeparator ();
 
-// HTTP header
-menuEntry ( "headers.php",
+/*
+ * HTTP header
+ */
+menuEntry ( "evaluateHeaders.php",
             "fa-header",
-            _ ( "HTTP-Header" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateHeadersMenuName" ]  );
 
-// cookies
-menuEntry ( "cookies.php",
+/*
+ * cookies
+ */
+menuEntry ( "evaluateCookies.php",
             "fa-birthday-cake",
-            _ ( "Cookies" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateCookiesMenuName" ]  );
 
-// referrals
-menuEntry ( "verweise.php",
+/*
+ * links
+ */
+menuEntry ( "evaluateLinks.php",
             "fa-exchange",
-            _ ( "Verweise" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateLinksMenuName" ]  );
 
 menuSeparator ();
 
-// SSL encryption
-menuEntry ( "sslsuites.php",
+/*
+ * SSL encryption
+ */
+menuEntry ( "evaluateSslsuites.php",
             "fa-key",
-            _ ( "SSL-Verschlüsselung" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateSSLMenuName" ]  );
 
-// certificates
-menuEntry ( "zertifikate.php",
+/*
+ * certificates
+ */
+menuEntry ( "evaluateCertificates.php",
             "fa-certificate",
-            _ ( "Zertifikate" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "evaluateCertificatesMenuName" ]  );
 
 closeMenu ();
 
 
 /*
- * internet
+ * 
+ * internet connection
+ * 
  */
-require_once ("hardware.php");
+require_once ("probeHardware.php");
+list ($wifi, $umts) = hasWifiUMTS ();
+$ethernet = ethernetCable ();
 
 openMenu ( "fa-globe",
-           _ ( "Internet" ) );
+           $__[ "include/topMenu" ] [ "values" ] [ "internetMenuName" ] );
 
-// LAN
-echo "<li id=\"$lanOnlineID\"";
-echo ethernetCable () ? ">" : " class=\"disabled\">";
-echo "<a href=\"connectLAN.php\">";
-echo "<i class=\"fa fa-sitemap fa-fw topmenu\"></i> ";
-echo _ ( "LAN" );
-echo "</a></li>";
+/*
+ * LAN
+ */
+if ( $ethernet )
+{
+  echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "lanOnline" ], "\"";
+  echo $ethernet == 1 ? ">" : " class=\"disabled\">";
+  echo "<a href=\"connectLAN.php\"><i class=\"fa ", $__[ "include/topMenu" ] [ "values" ] [ "internetLANMenuIcon" ], " fa-fw topmenu\"></i> ", $__[ "include/topMenu" ] [ "values" ] [ "internetLANMenuName" ], "</a></li>";
+}
 
-list ($wifi, $umts) = hasWifiUMTS ();
-
-// WLAN
-echo "<li id=\"$wlanOnlineID\"";
+/*
+ *  WLAN
+ */
+echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "wlanOnline" ], "\"";
 echo $wifi ? ">" : " class=\"disabled\">";
-echo "<a href=\"connectWLAN.php\">";
-echo "<i class=\"fa fa-wifi fa-fw topmenu\"></i> ";
-echo _ ( "WLAN" );
-echo "</a></li>";
+echo "<a href=\"connectWLAN.php\"><i class=\"fa ", $__[ "include/topMenu" ] [ "values" ] [ "internetWLANMenuIcon" ], " fa-fw topmenu\"></i> ", $__[ "include/topMenu" ] [ "values" ] [ "internetWLANMenuName" ], "</a></li>";
 
-// UMTS
-echo "<li id=\"$umtsOnlineID\"";
+/*
+ * UMTS
+ */
+echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "umtsOnline" ], "\"";
 echo $umts ? ">" : " class=\"disabled\">";
-echo "<a href=\"connectUMTS.php\">";
-echo "<i class=\"fa fa-signal fa-fw topmenu\"></i> ";
-echo _ ( "UMTS" );
-echo "</a></li>";
+echo "<a href=\"connectUMTS.php\"><i class=\"fa ", $__[ "include/topMenu" ] [ "values" ] [ "internetUMTSMenuIcon" ], " fa-fw topmenu\"></i> ", $__[ "include/topMenu" ] [ "values" ] [ "internetUMTSMenuName" ], "</a></li>";
 
 menuSeparator ();
 
-// offline
-echo "<li id=\"$offlineID\"";
-echo file_exists ( $offline_script ) ? ">" : " class=\"disabled\">";
-echo "<a href=\"disconnect.php\">";
-echo "<i class=\"fa fa-cut fa-fw topmenu\"></i> ";
-echo _ ( "Offline" );
-echo "</a></li>";
+/*
+ * go offline
+ */
+echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "offline" ], "\"";
+echo file_exists ( $temp_dir . "/" . $__[ "include/onlineOfflineUtility" ] [ "values" ] [ "offlineScript" ] ) ? ">" : " class=\"disabled\">";
+echo "<a href=\"connectOffline.php\"><i class=\"fa ", $__[ "include/topMenu" ] [ "values" ] [ "internetOfflineMenuIcon" ], " fa-fw topmenu\"></i> ", $__[ "include/topMenu" ] [ "values" ] [ "internetOfflineMenuName" ], "</a></li>";
 
 closeMenu ();
 
 
 /*
- * Tools
+ * 
+ * tools
+ * 
  */
-
 openMenu ( "fa-cog",
-           _ ( "Werkzeuge" ) );
+           $__[ "include/topMenu" ] [ "values" ] [ "toolsMenuName" ] );
 
-// search
+/*
+ * search
+ */
 boxMenuEntry ( $searchBox );
 
-// decode
+/*
+ * decode
+ */
 boxMenuEntry ( $decodeBox );
 
-// whois
+/*
+ * whois
+ */
 boxMenuEntry ( $whoisBox );
 
 menuSeparator ();
 
-// Manage Devices
-menuEntry ( "devices.php",
+/*
+ * manage devices
+ */
+menuEntry ( "manageDevices.php",
             "fa-tablet",
-            _ ( "Geräte verwalten" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsManageDevicesMenuName" ] );
 
-// Certificate
+/*
+ * own certificate
+ */
 menuEntry ( "manageCertificate.php",
-            "fa-certificate",
-            _ ( "$my_name-Zertifikat" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsCertificateMenuIcon" ],
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsCertificateMenuName" ] );
 
 menuSeparator ();
 
-// Import Recording
-menuEntry ( "import.php",
+/*
+ * import recording
+ */
+menuEntry ( "importRecording.php",
             "fa-download",
-            _ ( "Aufzeichnung importieren" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsImportMenuName" ] );
 
-// Clear Database
-menuEntry ( "erase.php",
+/*
+ * clear database
+ */
+menuEntry ( "purgeDatabase.php",
             "fa-trash",
-            _ ( "Datenbank leeren" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsPurgeMenuName" ] );
+
+
+/*
+ * memory stick
+ */
+require_once ("probeHardware.php");
+$memoryStick = hasMemoryStick ();
+echo "<li id=\"", $__[ "include/topMenu" ][ "ids" ][ "memoryStick" ], "\"";
+echo $memoryStick ? ">" : " class=\"disabled\">";
+echo $memoryStick == 2 ? ($__[ "include/topMenu" ] [ "values" ] [ "unmountMemoryStick" ] . " " . $__[ "include/topMenu" ] [ "values" ] [ "toolsUnmountMemoryStickMenuName" ] . "</a>") : ($__[ "include/topMenu" ] [ "values" ] [ "mountMemoryStick" ] . " " . $__[ "include/topMenu" ] [ "values" ] [ "toolsMountMemoryStickMenuName" ] . "</a>");
 
 menuSeparator ();
 
-// Settings
+/*
+ * settings
+ */
 menuEntry ( "settings.php",
-            "fa-wrench",
-            _ ( "Einstellungen" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsSettingsMenuIcon" ],
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsSettingsMenuName" ] );
 
-// Status
-menuEntry ( "status.php",
+/*
+ * status
+ */
+menuEntry ( "systemStatus.php",
             "fa-info",
-            _ ( "Status" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsStatusMenuName" ] );
 
-// Updates
+/*
+ * updates
+ */
 menuEntry ( "updates.php",
             "fa-flash",
-            _ ( "Updates" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsUpdateMenuName" ] );
 
-// About
+/*
+ * tutorial
+ */
+menuEntry ( "tutorial.php",
+            "fa-book",
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsTutorialMenuName" ] );
+/*
+ * about
+ */
 menuEntry ( "about.php",
             "fa-question",
-            _ ( "Über $my_name" ) );
+            $__[ "include/topMenu" ] [ "values" ] [ "toolsAboutMenuName" ] . " $my_name" );
 
 closeMenu ();
 
 
 /*
- * Power
+ * 
+ * power
+ * 
  */
 
-openMenu ( "fa-plug",
-           _ ( "Betrieb" ) );
+openMenu ( $__[ "include/topMenu" ] [ "values" ] [ "powerMenuIcon" ],
+           $__[ "include/topMenu" ] [ "values" ] [ "powerMenuName" ] );
 
-// Shutdown
-menuEntry ( "poweroff.php?restart=0",
+/*
+ * shutdown
+ */
+menuEntry ( "powerOff.php?restart=0",
             "fa-power-off",
             _ ( "Herunterfahren" ) );
 
-// Restart
-menuEntry ( "poweroff.php?restart=1",
+/*
+ * restart
+ */
+menuEntry ( "powerOff.php?restart=1",
             "fa-refresh",
             _ ( "Neu starten" ) );
 
@@ -601,24 +496,32 @@ echo "</ul>";
 
 
 /*
+ * 
  * utility boxes (search etc)
+ * 
  */
 
 echo "<div class=\"visible-lg-block\">";
 
-// whois
+/*
+ * whois
+ */
 if ( $__whoisbox )
 {
   utilityBox ( $whoisBox );
 }
 
-// decode
+/*
+ * decode
+ */
 if ( $__dekodbox )
 {
   utilityBox ( $decodeBox );
 }
 
-// search
+/*
+ * search
+ */
 if ( $__suchbox )
 {
   utilityBox ( $searchBox );
@@ -628,11 +531,14 @@ echo "</div>";
 
 
 /*
- * close navbar 
+ * close navbar
  */
 echo "</div></div>";
-// hide navbar in extra tabs (search etc)
-if ( isset ( $framename ) && $framename != "" )
+
+/*
+ * hide navbar in extra tabs (search etc)
+ */
+if ( isset ( $$__[ "include/openHTML" ][ "vars" ][ "frame" ] ) && $$__[ "include/openHTML" ][ "vars" ][ "frame" ] != "" )
 {
   echo "<div class=\"navHider\"></div>";
 }
@@ -640,6 +546,6 @@ echo "</nav>";
 
 
 /*
- * open content div (to be closed in htmlend.php)
+ * open content div (to be closed in closeHTML.php)
  */
 echo "<div class=\"container-fluid\">";

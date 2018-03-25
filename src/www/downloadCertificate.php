@@ -14,11 +14,13 @@
  * 
  * @author Ulrich Kühn
  * @see https://github.com/ulkuehn/LiMiT1
- * @copyright (c) 2017, Ulrich Kühn
+ * @copyright (c) 2017, 2018, Ulrich Kühn
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
  */
+set_include_path ( pathinfo ( $_SERVER[ "DOCUMENT_ROOT" ] )[ "dirname" ] . "/www" );
 require_once ("include/constants.php");
 require_once ("include/configuration.php");
+require_once ("include/globalNames.php");
 
 
 /* ===========================================================================
@@ -27,12 +29,12 @@ require_once ("include/configuration.php");
  * 
  * ======================================================================== */
 
-if ( file_exists ( $cert_file ) )
+if ( file_exists ( $base_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] ) )
 {
-  header ( "Content-Disposition: attachment; filename=\"" . pathinfo ( $cert_file )[ "basename" ] . "\"" );
+  header ( "Content-Disposition: attachment; filename=\"" . pathinfo ( $base_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ] )[ "basename" ] . "\"" );
   header ( "Content-Type: application/octet-stream" );
 
-  $file = fopen ( $cert_file,
+  $file = fopen ( $base_dir . "/" . $__[ "startStopRecording" ] [ "values" ] [ "certFile" ],
                   "rb" );
 
   while ( !feof ( $file ) )

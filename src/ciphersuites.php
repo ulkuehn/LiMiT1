@@ -29,7 +29,7 @@ $suites = $argv[2];
 $_SERVER["DOCUMENT_ROOT"] = "$base/www"; 
 require_once ($_SERVER["DOCUMENT_ROOT"]."/include/constants.php");
 require_once ($_SERVER["DOCUMENT_ROOT"]."/include/configuration.php");
-require_once ($_SERVER["DOCUMENT_ROOT"]."/include/database.php");
+require_once ($_SERVER["DOCUMENT_ROOT"]."/include/connectDB.php");
 
 $db->beginTransaction ();
 

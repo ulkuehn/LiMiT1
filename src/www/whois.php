@@ -1,219 +1,314 @@
 <?php
 
-//==============================================================================
-//==============================================================================
-//
-//     PROJECT: LiMiT1
-//        FILE: whois.php
-//         SEE: https://github.com/ulkuehn/LiMiT1
-//      AUTHOR: Ulrich Kühn
-//
-//       USAGE: by web server
-//
-// DESCRIPTION: used to display and obtain whois data for a domain
-//              whois data which has been retreived on the internet is
-//              kept in the LiMiT1 database for future use, so that not for each
-//              whois-query an online connection must be set up
-//
-//==============================================================================
-//==============================================================================
+/* ===========================================================================
+ * 
+ * PREAMBLE
+ * 
+ * ======================================================================== */
+
+/**
+ * project LiMiT1
+ * file whois.php
+ * 
+ * used to display and obtain whois data for a domain
+ * all whois data is kept in the LiMiT1 database for future use,
+ * and offline queries are preferred over online queries
+ * 
+ * @author Ulrich Kühn
+ * @see https://github.com/ulkuehn/LiMiT1
+ * @copyright (c) 2017, 2018, Ulrich Kühn
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GPLv3
+ */
+require_once ("include/constants.php");
+require_once ("include/configuration.php");
+require_once ("include/tableUtility.php");
+require_once ("include/timeUtility.php");
+require_once ("include/utility.php");
+require_once ("include/connectDB.php");
+
+include ("include/httpHeaders.php");
+
+$$__[ "include/openHTML" ][ "vars" ][ "title" ] = " - " . _ ( "Whois" );
+$$__[ "include/openHTML" ][ "vars" ][ "frame" ] = $__usetabs ? $__[ "whois" ][ "names" ][ "frame" ] : "";
+include ("include/openHTML.php");
+
+include ("include/topMenu.php");
 
 
-function whois ( $domain, $check )
+/* ===========================================================================
+ * 
+ * FUNCTIONS
+ * 
+ * ======================================================================== */
+
+/**
+ * do a whois query for a domain either online or offline
+ * 
+ * @param string $domainName domain name to be whois'd
+ * @return array(string,boolean): html containing the query result; true if lookup was online, false if offline
+ */
+function whoisLookup ( $domainName )
 {
-  global $db, $offline_script, $my_name;
+  global $db, $my_name, $__, $temp_dir;
 
-  $erg = "";
-  $checking = false;
-  $aktuelle = 0;
+  /*
+   * string having html results in
+   */
+  $resultString = "";
+  /*
+   * flag to indicate if result has been yielded online
+   */
+  $doOnline = false;
+  $insertID = 0;
 
-  $select_s = $db->prepare ( "select *, datediff(now(),stand) as _diffd, timediff(now(),stand) as _difft, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by stand desc" );
-  $select_s->execute ( array ( $check ) );
-  if ( ($whois = $select_s->fetch ()) == false || (isset ( $_POST[ "aktualisieren" ] ) && $_POST[ "aktualisieren" ] == $check) )
+  $selectWhoisStatement = $db->prepare ( "select *, unix_timestamp()-unix_timestamp(stand) as _tspan, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by stand desc" );
+  $selectWhoisStatement->execute ( array (
+    $domainName ) );
+
+  /*
+   * we do an online query if no offline result avail or explicitely asked for an update query
+   */
+  if ( ($whoisFetch = $selectWhoisStatement->fetch ()) == false || isset ( $_POST[ $__[ "whois" ] [ "params" ] [ "refresh" ] ] ) )
   {
-    $checking = true;
-    if ( is_readable ( $offline_script ) )
+    $doOnline = true;
+    if ( file_exists ( $temp_dir . "/" . $__[ "include/goOnline" ] [ "values" ][ "onlineFlag" ] ) )
     {
-      // whois Version 5.2.7 return value gives no indication if query was succesful (?)
-      exec ( "/usr/bin/whois -H $check", $who, $ret );
-      $who = implode ( "\n", $who );
-      $insert_s = $db->prepare ( "insert into whois set domain=?, whois=?, stand=now(), okay=?" );
-      // see above, so $ret bears no information
-      $insert_s->execute ( array ( $check, $who, TRUE ) ); //$ret == 0 ) );
-      $aktuelle = $db->lastInsertId ();
+      /*
+       * whois Version 5.2.7 return value gives no indication if query was succesful (?)
+       */
+      exec ( "/usr/bin/whois -H $domainName",
+             $whoisResult,
+             $whoisReturn );
+      $whoisResult = implode ( "\n",
+                               $whoisResult );
+      $insertStatement = $db->prepare ( "insert into whois set domain=?, whois=?, stand=now(), okay=?" );
+      /*
+       * see above, so $whoisReturn bears no information; always use TRUE
+       */
+      $insertStatement->execute ( array (
+        $domainName,
+        $whoisResult,
+        TRUE ) );
+      $insertID = $db->lastInsertId ();
 
-      $select_s = $db->prepare ( "select *, datediff(now(),stand) as _diffd, timediff(now(),stand) as _difft, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by stand desc" );
-      $select_s->execute ( array ( $check ) );
-      $whois = $select_s->fetch ();
+      /*
+       * repeat database query to get consistens results in $whoisFetch
+       */
+      $selectWhoisStatement = $db->prepare ( "select *, unix_timestamp()-unix_timestamp(stand) as _tspan, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by stand desc" );
+      $selectWhoisStatement->execute ( array (
+        $domainName ) );
+      $whoisFetch = $selectWhoisStatement->fetch ();
     }
   }
 
+  /*
+   * collect current and historical whois info in result to return
+   */
   do
   {
-    if ( $whois[ "id" ] == $aktuelle )
+    $fetchID = $whoisFetch[ "id" ];
+    if ( $fetchID == $insertID )
     {
-      $tinfo = "(aktuelle Abfrage)";
+      $headerInfo = _ ( "(aktuelle Abfrage)" );
     }
     else
     {
-      $tinfo = "(gespeicherter Stand vom " . $whois[ "_standd" ] . " <i class=\"fa fa-clock-o\"></i> " . $whois[ "_standt" ] . " = vor ";
-      if ( $whois[ "_diffd" ] > 2 )
-      {
-        $tinfo .= $whois[ "_diffd" ] . " Tagen)";
-      }
-      else
-      {
-        $tinfo .= $whois[ "_difft" ] . " Stunden)";
-      }
+      $headerInfo = _ ( "(gespeicherter Stand vom " ) . $whoisFetch[ "_standd" ] . " <i class=\"fa fa-clock-o\"></i> " . $whoisFetch[ "_standt" ] . " = " . humanReadableDuration ( $whoisFetch[ "_tspan" ] ) . _ ( " her)" );
     }
 
-    $in = $whois[ "id" ] == $aktuelle ? " in" : "";
-    $erg .= <<<LIMIT1
-  <div class="panel panel-primary">
-    <div class="panel-heading panelCollapse" role="tab" data-toggle="collapse" data-target="#{$whois[ "id" ]}">
-      <h4 class="panel-title">$check $tinfo</h4>
-    </div>
-    <div id="{$whois[ "id" ]}" class="panel-collapse collapse$in" role="tabpanel">
-      <div class="panel-body">
-LIMIT1;
-    if ( !$whois[ "okay" ] )
+    $resultString .= "<div class=\"panel panel-" . ((!$whoisFetch[ "okay" ] || $whoisFetch[ "whois" ] == "" ) ? "danger" : "success") . "\"><div class=\"panel-heading panelCollapse\" role=\"tab\" data-toggle=\"collapse\" data-target=\"#$fetchID\"><h4 class=\"panel-title\">$domainName $headerInfo</h4></div>";
+    $resultString .= "<div id=\"$fetchID\" class=\"panel-collapse collapse" . ($fetchID == $insertID ? " in" : "") . " role=\"tabpanel\"><div class=\"panel-body\">";
+
+    if ( !$whoisFetch[ "okay" ] || $whoisFetch[ "whois" ] == "" )
     {
-      $erg .= alertMsg ( "Die Whois-Abfrage von \"$check\" war nicht erfolgreich", false );
+      $resultString .= showAlertMessage ( _ ( "Die Whois-Abfrage von \"$domainName\" war nicht erfolgreich" ),
+                                              false );
     }
-
-    $erg .= tableSorter ( "tab" . $whois[ "id" ], "columns: [ {}, {} ], order: [ [0,'asc'] ]" );
-
-    $erg .= <<<LIMIT1
-        <form method="post" class="form-horizontal">
-          <input type="hidden" name="domain" value="$domain">
-          <div class="form-group">
-            <div class="col-sm-6">
-              <button class="btn btn-info btn-sm" title="Textansicht" onclick="document.getElementById('ta{$whois[ "id" ]}').style.display='none';document.getElementById('te{$whois[ "id" ]}').style.display='block';return false;"><i class="fa fa-align-left"></i></button>
-              <button class="btn btn-info btn-sm" title="Tabellenansicht" onclick="document.getElementById('te{$whois[ "id" ]}').style.display='none';document.getElementById('ta{$whois[ "id" ]}').style.display='block';return false;"><i class="fa fa-table"></i></button>
-            </div>
-            <div class="col-sm-6">
-              <p class="text-right"><button type="submit" class="btn btn-success btn-sm" title="Aktualisieren" name="aktualisieren" value="$check">$check erneut abfragen <i class="fa fa-refresh"></i></button></p>
-            </div>
-          </div>
-        </form>
-        <div id="te{$whois[ "id" ]}">
-          <pre>{$whois[ "whois" ]}</pre>
-        </div>
-        <div class="table-responsive" id="ta{$whois[ "id" ]}" style="display:none">
-          <table id="tab{$whois[ "id" ]}" class="table table-hover">
-            <thead>
-              <tr>
-                <th>Feld</th>
-                <th>Wert</th>
-              </tr>
-            </thead>
-            <tbody>
-LIMIT1;
-    $lines = array ();
-    foreach ( explode ( PHP_EOL, $whois[ "whois" ] ) as $line )
+    else
     {
-      if ( preg_match ( "/^([^:]+):\s+(.*)/", $line, $m ) )
+      $resultString .= tableSorter ( "tab" . $fetchID,
+                                     "columns: [ {}, {} ], order: [ [0,'asc'] ]" );
+
+      $resultString .= "<p class=\"text-right\"><button class=\"btn btn-info btn-sm\" title=\"" . _ ( "Textansicht" ) . "\" onclick=\"document.getElementById('" . $__[ "whois" ] [ "ids" ] [ "tableViewPrefix" ] . $fetchID . "').style.display='none'; document.getElementById('" . $__[ "whois" ] [ "ids" ] [ "textViewPrefix" ] . $fetchID . "').style.display='block'; return false;\"><i class=\"fa fa-align-left\"></i></button> ";
+
+      $resultString .= "<button class=\"btn btn-info btn-sm\" title=\"" . _ ( "Tabellenansicht" ) . "\" onclick=\"document.getElementById('" . $__[ "whois" ] [ "ids" ] [ "textViewPrefix" ] . $fetchID . "').style.display='none'; document.getElementById('" . $__[ "whois" ] [ "ids" ] [ "tableViewPrefix" ] . $fetchID . "').style.display='block'; return false;\"><i class=\"fa fa-table\"></i></button></p>";
+
+      $resultString .= "<div class=\"row\"><div id=\"" . $__[ "whois" ] [ "ids" ] [ "textViewPrefix" ] . $fetchID . "\"><pre>" . $whoisFetch[ "whois" ] . "</pre></div><div class=\"table-responsive\" id=\"" . $__[ "whois" ] [ "ids" ] [ "tableViewPrefix" ] . $fetchID . "\" style=\"display:none\"><table class=\"table table-hover\"><thead><tr><th>" . _ ( "Feld" ) . "</th><th>" . _ ( "Wert" ) . "</th></tr></thead><tbody>";
+
+      $lines = array ();
+      foreach ( explode ( PHP_EOL,
+                          $whoisFetch[ "whois" ] ) as $line )
       {
-        if ( !array_key_exists ( $m[ 1 ] . $m[ 2 ], $lines ) )
+        if ( preg_match ( "/^([^:]+):\s+(.*)/",
+                          $line,
+                          $match ) )
         {
-          $erg .= "<tr><td>" . $m[ 1 ] . "</td><td>" . $m[ 2 ] . "</td></tr>";
-          $lines[ $m[ 1 ] . $m[ 2 ] ] = TRUE;
+          if ( !array_key_exists ( $match[ 1 ] . $match[ 2 ],
+                                   $lines ) )
+          {
+            $resultString .= "<tr><td>" . $match[ 1 ] . "</td><td>" . $match[ 2 ] . "</td></tr>";
+            $lines[ $match[ 1 ] . $match[ 2 ] ] = TRUE;
+          }
         }
       }
+      $resultString .= "</tbody></table></div></div>";
     }
-    $erg .= <<<LIMIT1
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-LIMIT1;
+    $resultString .= "</div></div></div>";
   }
-  while ( $whois = $select_s->fetch () );
+  while ( $whoisFetch = $selectWhoisStatement->fetch () );
 
-  return array ( $erg, $checking );
+  return array (
+    $resultString,
+    $doOnline );
 }
 
-require_once ("include/constants.php");
-require_once ("include/configuration.php");
-require_once ("include/utility.php");
-require_once ("include/database.php");
 
-include ("include/http.php");
-$extratitel = " - Whois";
-$framename = $__usetabs ? "whois" : "";
-include ("include/htmlstart.php");
-$extranav = $__usetabs ? "<div class=\"navHider\"></div>" : "";
-include ("include/topmenu.php");
+/* ===========================================================================
+ * 
+ * MAIN CODE
+ * 
+ * ======================================================================== */
 
-$domain = array_key_exists ( "whois", $_REQUEST ) ? strtolower ( trim ( $_REQUEST[ "whois" ] ) ) : "";
+$domain = array_key_exists ( $__[ "whois" ] [ "params" ][ "whois" ],
+                             $_REQUEST ) ? strtolower ( trim ( $_REQUEST[ $__[ "whois" ] [ "params" ][ "whois" ] ] ) ) : "";
 $domainValue = htmlspecialchars ( $domain );
 
-titleAndHelp ( "Whois-Abfrage", <<<LIMIT1
-Die Whois-Informationen zu einer Domain enthalten viele hilfreiche Hinweise.
-Bei Bedarf kann mit dieser Funktion eine entsprechende Abfrage durchgeführt werden.
-Die über das Internet erhaltenen Informationen werden in der Datenbank gespeichert,
-so dass sie nicht jedes Mal erneut abgerufen werden müssen.
-<br>
-Werden Domainnamen in Auswertungen angegeben, ist durch farbige Hinterlegung der Domainteile
-erkennbar, ob bereits entsprechende Whois-Informationen in der Datenbank vorhanden sind.
-LIMIT1
-);
+titleAndHelp ( _ ( "Whois-Abfrage" ),
+                   _ ( "Die Whois-Informationen zu einer Domain enthalten viele hilfreiche Hinweise. Bei Bedarf kann mit dieser Funktion eine entsprechende Abfrage durchgeführt werden. Die über das Internet erhaltenen Informationen werden in der Datenbank gespeichert, so dass sie nicht jedes Mal erneut abgerufen werden müssen.<br><br>Die Abfrage der gespeicherten Whois-Daten ist auch \"mit Musterzeichen\" möglich. Der Domainstring wird dann als regulärer Ausdruck interpretiert. Dann haben u.a. folgende Zeichen eine besondere Bedeutung:</p>" ) . "<table class=\"table table-condensed\"><tbody>" . "<tr><td><strong>.</strong></td><td>" . _ ( "beliebiges Zeichen" ) . "</td></tr>" . "<tr><td><strong>?</strong></td><td>" . _ ( "vorheriges Zeichen kommt nicht oder einmal vor" ) . "</td></tr>" . "<tr><td><strong>*</strong></td><td>" . _ ( "vorheriges Zeichen kommt nicht, ein- oder mehrmals vor" ) . "</td></tr>" . "<tr><td><strong>+</strong></td><td>" . _ ( "vorheriges Zeichen kommt ein- oder mehrmals vor" ) . "</td></tr>" . "<tr><td><strong>^</strong></td><td>" . _ ( "Textanfang" ) . "</td></tr>" . "<tr><td><strong>$</strong></td><td>" . _ ( "Textende" ) . "</td></tr>" . "<tr><td><strong>|</strong></td><td>" . _ ( "Oder-Verknüpfung" ) . "</td></tr></tbody></table>" );
 
-echo <<<LIMIT1
-<form method="post" class="form-horizontal">
-  <div class="row" style="margin-bottom:20px">
-    <div class="input-group">
-      <span class="input-group-btn">
-        <input type="submit" class="btn btn-primary" value="Domain">
-      </span>
-      <input class="form-control" type="text" id="idomain" name="whois" value="$domainValue">
-      <span class="input-group-btn">
-        <button type="button" class="btn btn-default" onclick="document.getElementById('idomain').value='';">&times;</button>
-      </span>
-    </div>
-  </div>
-</form>
-<div class="row">
-  <div class="panel-group" id="about" role="tablist">
-LIMIT1;
+/*
+ * form
+ */
+echo "<form method=\"post\" class=\"form-horizontal\"><div class=\"row\" style=\"margin-bottom:20px\"><div class=\"input-group\">";
+echo "<span class=\"input-group-btn\"><input type=\"submit\" class=\"btn btn-primary\" value=\"", _ ( "Domain" ), "\"></span>";
+echo "<input class=\"form-control\" type=\"text\" id=\"", $__[ "whois" ] [ "params" ][ "whois" ], "\" name=\"", $__[ "whois" ] [ "params" ][ "whois" ], "\" value=\"$domainValue\">";
+echo "<span class=\"input-group-btn\"><button type=\"button\" class=\"btn btn-default\" onclick=\"document.getElementById('", $__[ "whois" ] [ "params" ][ "whois" ], "').value='';\">&times;</button></span></div>";
+echo "<div class=\"checkbox\"><p class=\"text-right\"><label><input type=\"checkbox\" name=\"", $__[ "whois" ][ "params" ] [ "regexp" ], "\"", ( array_key_exists ( $__[ "whois" ][ "params" ] [ "regexp" ],
+                                                                                                                                                                    $_REQUEST ) && $_REQUEST[ $__[ "whois" ][ "params" ] [ "regexp" ] ] == "on" ? " checked" : "" ), ">", _ ( "mit Musterzeichen (nur gespeicherte Informationen abrufen)" ), "</label></p></div></div></form>";
 
-if ( ( preg_match ( "/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain ) &&
-    preg_match ( "/^.{1,253}$/", $domain ) &&
-    preg_match ( "/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain ) ) || ip2long ( $domain ) != false )
+/*
+ * ignore empty input
+ */
+if ( $domain != "" )
 {
-  $erg = "";
-  $checking = false;
-
-  list ($e, $c) = whois ( $domain, $domain );
-  $erg .= $e;
-  $checking |= $c;
-
-  if ( ip2long ( $domain ) == false )
+  /*
+   * with regexp
+   */
+  if ( $_REQUEST[ $__[ "whois" ][ "params" ] [ "regexp" ] ] )
   {
-    $parts = explode ( ".", $domain );
-    while ( count ( $parts ) > 2 )
+    echo "<div class=\"row\"><div class=\"panel panel-primary\"><div class=\"panel-heading\"><h4 class=\"panel-title\">", _ ( "Domains" ), "</h4></div><div class=\"panel-body\">";
+    echo tableSorter ( $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ],
+                       "columns: [ {orderable:false, searchable:false}, {type:'num'}, {type:'date'}, {orderable:false,width:'67%'} ], order: [ [1,'num'] ]" );
+    $foldUnfoldButton = tableFolder ( $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ] );
+
+    echo "<div class=\"table-responsive\"><table id=\"", $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\" class=\"table table-hover\"><thead><tr>";
+    echo "<th>$foldUnfoldButton</th>";
+    echo "<th>Name</th>";
+    echo "<th><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "foldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\">Alter</span><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "unfoldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\">Stand</span></th>";
+    echo "<th>Whois</th></tr></thead><tbody>";
+
+    /*
+     * get all domain names in db and order them appropriately
+     */
+    $selectWhoisDomainStatement = $db->prepare ( "select distinct domain from whois where domain REGEXP ? order by domain desc" );
+    $selectWhoisDomainStatement->execute ( array (
+      $domain ) );
+    $allDomains = $selectWhoisDomainStatement->fetchAll ( PDO::FETCH_COLUMN,
+                                                          0 );
+    usort ( $allDomains,
+            "hostnameSort" );
+    $domainOrder = count ( $allDomains );
+
+    foreach ( $allDomains as $whoisDomain )
     {
-      array_shift ( $parts );
-      list ($e, $c) = whois ( $domain, implode ( ".", $parts ) );
-      $erg .= $e;
-      $checking |= $c;
+      $selectWhoisStatement = $db->prepare ( "select *, unix_timestamp()-unix_timestamp(stand) as _tspan, date_format(stand,'%e.%c.%Y') as _standd, date_format(stand,'%H:%i:%s') as _standt from whois where domain=? order by okay desc, stand desc limit 1" );
+      $selectWhoisStatement->execute ( array (
+        $whoisDomain ) );
+      $whois = $selectWhoisStatement->fetch ();
+
+      echo "<tr><td>", showIconButton ( "fa fa-eye",
+                                        "whois.php?" . $__[ "whois" ][ "params" ] [ "whois" ] . "=$whoisDomain",
+                                        $__[ "whois" ][ "titles" ][ "viewWhois" ],
+                                        $whois[ "okay" ] ? "success" : "danger",
+                                        $__usetabs ? $__[ "whois" ] [ "names" ] [ "frame" ] : ""
+      ), "</td>";
+
+      echo "<td>$whoisDomain<!--$domainOrder--></td>";
+
+      echo "<td", onTableToggleEvent ( $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ] ), "><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "foldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\">", humanReadableDuration ( $whois[ "_tspan" ] ), "</span><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "unfoldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\">", $whois[ "_standd" ], " <i class=\"fa fa-clock-o\"></i> ", $whois[ "_standt" ], "<!--", $whois[ "stand" ], "--></td>";
+
+      echo "<td", onTableToggleEvent ( $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ] ), "><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "foldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\">", explode ( PHP_EOL,
+                                                                                                                                                                                                                                       $whois[ "whois" ] )[ 0 ], $__[ "include/tableUtility" ][ "values" ][ "foldedEllipses" ], "</span><span class=\"", $__[ "include/tableUtility" ][ "ids" ][ "unfoldedPrefix" ], $__[ "whois" ][ "ids" ][ "tables" ][ "whois" ], "\"><pre class=\"pre-scrollable\">", $whois[ "whois" ], "</pre></span></td></tr>";
+
+      $domainOrder--;
     }
+    echo "</tbody></table></div></div></div>";
   }
 
-  if ( !is_readable ( $offline_script ) && $checking )
+  /*
+   * no regexp: check validity of input
+   */
+  else if ( ( preg_match ( "/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i",
+                           $domain ) &&
+    preg_match ( "/^.{1,253}$/",
+                 $domain ) &&
+    preg_match ( "/^[^\.]{1,63}(\.[^\.]{1,63})*$/",
+                 $domain ) ) || ip2long ( $domain ) != false )
   {
-    errorMsg ( "$my_name ist offline. Eine Whois-Abfrage ist nur bei bestehender Internetverbindung möglich." );
+    if ( file_exists ( $temp_dir . "/" . $__[ "include/goOnline" ] [ "values" ][ "onlineFlag" ] ) )
+    {
+      echo "<form method=\"post\" class=\"form-horizontal\"><div class=\"row\" style=\"margin-bottom:20px\"><p class=\"text-right\"><input type=\"hidden\" name=\"", $__[ "whois" ] [ "params" ][ "whois" ], "\" value=\"$domain\"><button type=\"submit\" class=\"btn btn-primary btn-sm\" title=\"", _ ( "Aktualisieren" ), "\" name=\"", $__[ "whois" ] [ "params" ] [ "refresh" ], "\">", _ ( "$domainValue online abfragen" ), " <i class=\"fa fa-refresh\"></i></button></p></div></form>";
+    }
+
+    $result = "<div class=\"row\"><div class=\"panel-group\" role=\"tablist\">";
+    $doneOnline = false;
+
+    list ($r, $o) = whoisLookup ( $domain );
+    $result .= $r;
+    $doneOnline |= $o;
+
+    /*
+     * if domain is a real domain name (not an ip address), do additional whois queries for father levels of domain hierarchy
+     */
+    if ( ip2long ( $domain ) == false )
+    {
+      $parts = explode ( ".",
+                         $domain );
+      /*
+       * we need at least two name parts (no query on tld alone)
+       */
+      if ( count ( $parts ) > 2 )
+      {
+        $result .= "<p style=\"margin-top:20px\" class=\"text-right\">" . _ ( "Superdomains (von denen $domainValue eine Subdomain ist)" ) . "</p>";
+      }
+      while ( count ( $parts ) > 2 )
+      {
+        array_shift ( $parts );
+        list ($r, $o) = whoisLookup ( implode ( ".",
+                                                $parts ) );
+        $result .= $r;
+        $doneOnline |= $o;
+      }
+    }
+
+    if ( !file_exists ( $temp_dir . "/" . $__[ "include/goOnline" ] [ "values" ][ "onlineFlag" ] ) && $doneOnline )
+    {
+      echo "<div class=\"row\">";
+      showErrorMessage ( _ ( "$my_name ist offline. Eine Whois-Abfrage ist nur bei bestehender Internetverbindung möglich." ) );
+      echo "</div>";
+    }
+    echo $result;
   }
-  echo $erg;
-}
-else if ( array_key_exists ( "whois", $_REQUEST ) )
-{
-  errorMsg ( "\"$domainValue\" ist kein gültiger Domainname" );
+  /*
+   * input not valid
+   */
+  else
+  {
+    echo "<div class=\"row\">";
+    showErrorMessage ( _ ( "\"$domainValue\" ist kein gültiger Domainname" ) );
+  }
+
+  echo "</div>";
 }
 
-echo "</div></div>";
-
-include ("include/htmlend.php");
-?>
+include ("include/closeHTML.php");
