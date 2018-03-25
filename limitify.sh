@@ -31,7 +31,7 @@ myName="LiMiT1"
 # major version; full version number is "major.minor"
 majorVersion="1.2"
 # minor version counter, may get updated automagically by git commit
-minorVersion="2"
+minorVersion="3"
 # codename
 versionName="Farmsen"
 
